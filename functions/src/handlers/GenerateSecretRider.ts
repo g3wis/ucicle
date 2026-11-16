@@ -26,9 +26,9 @@ async function handleGenerateSecretRider(): Promise<HandlerResponse> {
           );
         const ridersResponse: AxiosResponse<Rider[]> = await axios.get(`http://${process.env.BUCKET_NAME}.${process.env.DOMAIN}/api/riders.json`);
 
-        const top200: Rider[] = ridersResponse.data.filter((rider: Rider) => rider.rank <= 100);
-        const randomIndex: number = Math.floor(Math.random() * (top200.length + 1));
-        const randomRider: Rider = top200[randomIndex];
+        const top100: Rider[] = ridersResponse.data.filter((rider: Rider) => rider.rank <= 100);
+        const randomIndex: number = Math.floor(Math.random() * top100.length);
+        const randomRider: Rider = top100[randomIndex];
 
         const gameSession: GameSession = {
             rider: randomRider,
