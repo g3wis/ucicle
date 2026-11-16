@@ -24,6 +24,14 @@ The purpose of this lambda is to randomly retrieve a rider from the riders list 
 | cron trigger | 0 5 * * * |
 | endpoint     | -         |
 
+## Node version
+
+The Node major version is pinned in [`.nvmrc`](.nvmrc), the single source of truth:
+* CI and CD install this version (`node-version-file` in the workflows).
+* `deploy.js` sets the Scaleway Function runtime to `node<version>` before each deployment if it differs.
+
+To upgrade Node, change `.nvmrc` (and `engines` in `package.json`), check that the runtime exists in the [Scaleway runtimes list](https://www.scaleway.com/en/docs/serverless-functions/reference-content/functions-runtimes/), then merge to `master`.
+
 ## Environment variables
 
 | variable    | description                            |
@@ -38,6 +46,7 @@ The purpose of this lambda is to randomly retrieve a rider from the riders list 
 
 | parameter  | value     |
 |------------|-----------|
+| runtime    | `node26` (Node 26 LTS) |
 | min memory | 4GB       |
 | cron       | 0 0 1 * * |
 | endpoint   | -         |
