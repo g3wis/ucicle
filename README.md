@@ -1,37 +1,118 @@
 # Ucicle
 
-Ucicle is a daily game based on [wordle](https://www.nytimes.com/games/wordle/index.html) and [poetl](https://poeltl.dunk.town/) games.
+Daily guessing game: find the mystery pro cyclist of the day in 5 tries.
+Inspired by [Wordle](https://www.nytimes.com/games/wordle/index.html) and [Poeltl](https://poeltl.dunk.town/).
+
+## Rules
+
+- **One mystery rider per day**, drawn from the **UCI top 100**. A new one is published every day at 05:00 (cron `0 5 * * *`).
+- You can guess any rider from the **UCI top 1000**.
+- **5 tries** maximum.
+- **Starting hint**: the mystery rider's best result, e.g. *"2 times 1st of the mountains classification of Tour de France in 2022 and 2023"*.
+- **After each guess**, every attribute is compared to the mystery rider:
+
+  | Attribute            | Feedback                                                       |
+  |----------------------|----------------------------------------------------------------|
+  | Age, height, weight  | `=` same · ↑ mystery rider's value is higher · ↓ it is lower   |
+  | Country, team        | 🟩 same · 🟥 different                                          |
+
+- **End of game**: right name → win. 5th wrong guess → lose. The answer is revealed and a *Share* button copies the result (`🎉 (3/5) 🟥🟥🟩`) to the clipboard.
+- **No account**: today's game and the stats (games played, wins, win rate, history) live in the browser's `localStorage`.
 
 ## Architecture
 
-Ucicle project is divided in two parts :
-* A React front-end located at `front` folder
-* Node.js functions located at `functions` designed to generate game data
+```mermaid
+flowchart LR
+  PCS[procyclingstats.com] -- scraping --> FN[functions/<br>Scaleway Serverless Function]
+  FN -- writes api/riders.json<br>and api/secret_rider.json --> BK[(Scaleway Object Storage<br>bucket = static website)]
+  BK -- index.html, JS, api/*.json --> FR[front/<br>React app in the browser]
+  FR <--> LS[(localStorage<br>game history)]
+```
 
-### Front end
+**No backend at runtime.** The bucket serves the static site *and* the two JSON files. All game logic (comparisons, win/lose, stats) runs in the browser.
 
-The react front end is designed to be served by a web server. The website needs two files :
-* Riders referential accessible at `api/riders.json`
-* A secret rider to guess accessible at `api/secret_rider.json`
+| Folder       | Stack                                        | Role                                                      |
+|--------------|----------------------------------------------|-----------------------------------------------------------|
+| `front/`     | React 18, TypeScript, Vite, MUI, SCSS        | Game UI, FR/EN. Reads `/api/*.json`, stores history locally. |
+| `functions/` | Node.js, TypeScript, jsdom, AWS S3 SDK       | Scrapes rider data and publishes the game files to the bucket. |
 
-## Front
+### Data jobs (`functions/`)
 
-You can check the front-end documentation [here](./front/README.md)
+A single entry point, `handler` in [functions/src/index.ts](functions/src/index.ts), routes on `body.action`:
 
-## Functions
+| Action                  | Cron                  | What it does                                                                                       | Output                 |
+|-------------------------|-----------------------|----------------------------------------------------------------------------------------------------|------------------------|
+| `LOAD_RIDERS`           | `0 0 1 * *` (monthly) | Scrapes the UCI top 1000 from procyclingstats (10 pages of 100, 5 riders at a time). Drops riders with incomplete data. | `api/riders.json`      |
+| `GENERATE_SECRET_RIDER` | `0 5 * * *` (daily)   | Picks a random rider with UCI rank ≤ 100 from `riders.json`.                                       | `api/secret_rider.json`|
 
-You can check functions documentation [here](./functions/README.md)
+### Data contract
+
+```ts
+Rider       = { rank, name, country, age, weight, height, team, bestResult }
+BestResult  = { race, rank, raceType: 'GC' | 'Point GC' | 'KOM' | 'stage' | 'race', recurrence, years[] }
+GameSession = { date: 'YYYYMMDD', rider }   // content of secret_rider.json
+```
+
+⚠️ These types are **duplicated** in `front/src/types/` and `functions/src/types/`. Change both together.
+
+### Repository layout
+
+```
+.github/workflows/  ci.yml: lint + build on every push/PR · cd.yml: deploy on master
+front/src/
+  App.tsx           game flow (fetch data, handle guesses, win/lose)
+  components/       hint card, rider select, guess table, result card, modals
+  services/         gameService: localStorage history + share
+  i18n/             fr.ts / en.ts
+  types/            Rider, GameSession…
+functions/src/
+  index.ts          serverless handler (action router)
+  main.ts           local run: LOAD_RIDERS then GENERATE_SECRET_RIDER
+  handlers/         one file per action
+  scrappers/        procyclingstats HTML parsing
+  s3/               upload to the bucket
+```
+
+## Getting started
+
+Node 20 and Yarn.
+
+```bash
+# Front: http://localhost:5173, /api is proxied to the production bucket
+cd front && yarn && yarn start
+```
+
+```bash
+# Functions: runs both jobs locally. Needs a .env (see below) and WRITES to the bucket.
+cd functions && yarn && yarn build && node build/main.js
+```
 
 ## Deployment
 
-Running `yarn cd` launches the command for `front` and `functions` directories. More information about deployment [here (front)](./front/README.md) adn [here (functions)](./functions/README.md).
+Automatic on push to `master` ([cd.yml](.github/workflows/cd.yml)), each part runs `yarn cd`:
 
-## Contributing
+- **front**: `vite build`, then uploads `build/` to the bucket (public-read).
+- **functions**: zips `build/` + `node_modules`, uploads it to the Scaleway Function `FUNCTION_ID` and deploys it.
 
-Pull requests are welcome. For major changes, please open an issue first
-to discuss what you would like to change.
+| Variable       | Used by          | Description                               |
+|----------------|------------------|-------------------------------------------|
+| `ACCESS_KEY`   | front, functions | Scaleway access key (secret)              |
+| `SECRET_KEY`   | front, functions | Scaleway secret key (secret)              |
+| `DOMAIN`       | front, functions | Object Storage endpoint domain            |
+| `REGION`       | functions        | Scaleway region (e.g. `fr-par`)           |
+| `BUCKET_NAME`  | front, functions | Bucket hosting the site and the JSON files |
+| `FUNCTION_ID`  | functions (CD)   | Scaleway Function to deploy               |
 
-Please make sure to update tests as appropriate.
+The function's crons and memory (4 GB min) are configured in Scaleway, not in this repo.
+
+## Conventions
+
+- CI (`yarn ci`: ESLint + build) must pass for both `front/` and `functions/`.
+- Every UI string goes in **both** `front/src/i18n/fr.ts` and `en.ts`.
+- Keep the `Rider` types in sync between `front/` and `functions/`.
+- SCSS structure: see [front/assets/scss/README.md](front/assets/scss/README.md).
+
+More details: [front/README.md](front/README.md) · [functions/README.md](functions/README.md)
 
 ## License
 
