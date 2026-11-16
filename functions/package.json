@@ -9,6 +9,7 @@
     "ci": "yarn && yarn lint && yarn build",
     "cd": "yarn && yarn build && node deploy.js",
     "build": "tsc -p tsconfig.json",
+    "load:local": "node build/local.js",
     "lint": "eslint src",
     "fix:lint": "eslint src --fix",
     "watch:build": "tsc -p tsconfig.json -w",
@@ -19,11 +20,9 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.363.0",
-    "@types/jsdom": "^21.1.1",
     "axios": "^1.4.0",
     "dayjs": "^1.11.9",
-    "dotenv": "^16.3.1",
-    "jsdom": "^22.1.0"
+    "dotenv": "^16.3.1"
   },
   "devDependencies": {
     "@eslint-community/eslint-plugin-eslint-comments": "^4.8.1",

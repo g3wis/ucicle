@@ -6,7 +6,30 @@
 
 ## handleLoadRiders
 
-The aim of this function is to retrieve the list of the top 1000 UCI (Union Cyclistes International which means International United Cyclists) riders once a month. This list will be saved in an s3 service. Datas are scrapped from [procyclingstats](https://www.procyclingstats.com/rankings.php). Only riders with correctly formed informations are saved.
+The aim of this function is to retrieve the list of the top 1000 UCI (Union Cycliste Internationale) riders once a month. This list will be saved in an s3 service. Only riders with complete data (team, country, height, weight, best result) are saved, and nothing is uploaded when fewer than 300 riders (or 50 of the top 100) are complete.
+
+### Data sources
+
+procyclingstats.com, the previous source, now answers every automated client with a Cloudflare challenge (HTTP 403), so the data comes from open sources:
+
+| Field                              | Source                                                                                                                                  |
+|------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| rank, name, country, age, team     | [UCI World Ranking](https://dataride.uci.ch/iframe/rankings/10) (men elite, road), served as JSON by UCI DataRide: one request for the top 1000 |
+| name (display spelling)            | English label on [Wikidata](https://www.wikidata.org), matched by "UCI rider ID" (P11020), else by date of birth and name                |
+| height, weight                     | Wikidata (P2048, P2067), else the infobox of the English Wikipedia article                                                               |
+| bestResult                         | The rider's UCI results of the last 52 weeks (DataRide): the result worth the most UCI points, and how many times the rider got it      |
+
+Teams are the official UCI names (uppercase). The best result covers the ranking window (last 52 weeks), not the whole career.
+
+DataRide answers each rider's results in 2 to 6 seconds, so a run takes about 15 minutes (4 requests in flight): the Scaleway function timeout must allow it.
+
+### Local run
+
+```bash
+yarn build && yarn load:local [output file]   # default: build/riders.local.json
+```
+
+Builds the riders list and writes it to a file, without touching the bucket. `HTTP_USER_AGENT` overrides the User-Agent sent to the data sources.
 
 ### Configuration
 

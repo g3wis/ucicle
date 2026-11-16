@@ -23,7 +23,8 @@ Inspired by [Wordle](https://www.nytimes.com/games/wordle/index.html) and [Poelt
 
 ```mermaid
 flowchart LR
-  PCS[procyclingstats.com] -- scraping --> FN[functions/<br>Scaleway Serverless Function]
+  UCI[UCI DataRide<br>world ranking + results] -- JSON --> FN[functions/<br>Scaleway Serverless Function]
+  WD[Wikidata +<br>English Wikipedia] -- height, weight --> FN
   FN -- writes api/riders.json<br>and api/secret_rider.json --> BK[(Scaleway Object Storage<br>bucket = static website)]
   BK -- index.html, JS, api/*.json --> FR[front/<br>React app in the browser]
   FR <--> LS[(localStorage<br>game history)]
@@ -34,7 +35,7 @@ flowchart LR
 | Folder       | Stack                                        | Role                                                      |
 |--------------|----------------------------------------------|-----------------------------------------------------------|
 | `front/`     | React 18, TypeScript, Vite, MUI, SCSS        | Game UI, FR/EN. Reads `/api/*.json`, stores history locally. |
-| `functions/` | Node.js, TypeScript, jsdom, AWS S3 SDK       | Scrapes rider data and publishes the game files to the bucket. |
+| `functions/` | Node.js, TypeScript, axios, AWS S3 SDK       | Collects rider data and publishes the game files to the bucket. |
 
 ### Data jobs (`functions/`)
 
@@ -42,7 +43,7 @@ A single entry point, `handler` in [functions/src/index.ts](functions/src/index.
 
 | Action                  | Cron                  | What it does                                                                                       | Output                 |
 |-------------------------|-----------------------|----------------------------------------------------------------------------------------------------|------------------------|
-| `LOAD_RIDERS`           | `0 0 1 * *` (monthly) | Scrapes the UCI top 1000 from procyclingstats (10 pages of 100, 5 riders at a time). Drops riders with incomplete data. | `api/riders.json`      |
+| `LOAD_RIDERS`           | `0 0 1 * *` (monthly) | Loads the UCI top 1000 from the UCI World Ranking, height/weight from Wikidata/Wikipedia, best result from each rider's UCI results ([sources](functions/README.md#data-sources)). Drops riders with incomplete data. | `api/riders.json`      |
 | `GENERATE_SECRET_RIDER` | `0 5 * * *` (daily)   | Picks a random rider with UCI rank ≤ 100 from `riders.json`.                                       | `api/secret_rider.json`|
 
 ### Data contract
@@ -69,7 +70,7 @@ functions/src/
   index.ts          serverless handler (action router)
   main.ts           local run: LOAD_RIDERS then GENERATE_SECRET_RIDER
   handlers/         one file per action
-  scrappers/        procyclingstats HTML parsing
+  scrappers/        UCI DataRide and Wikidata/Wikipedia clients, best result
   s3/               upload to the bucket
 ```
 
@@ -83,8 +84,10 @@ cd front && yarn && yarn start
 ```
 
 ```bash
-# Functions: runs both jobs locally. Needs a .env (see below) and WRITES to the bucket.
-cd functions && yarn && yarn build && node build/main.js
+# Functions: builds the riders list locally into build/riders.local.json, without touching the bucket
+cd functions && yarn && yarn build && yarn load:local
+# Runs both jobs locally. Needs a .env (see below) and WRITES to the bucket.
+node build/main.js
 ```
 
 ## Deployment
