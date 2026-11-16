@@ -5,58 +5,50 @@ import fs from 'fs';
 import axios from 'axios';
 
 const SCRIPT_DIR_NAME = dirname(fileURLToPath(import.meta.url));
-const FUNCTION_ARCHIVE="functions.zip";
-const FUNCTION_ID= process.env.FUNCTION_ID;
+const FUNCTION_ARCHIVE = 'functions.zip';
+const FUNCTION_ID = process.env.FUNCTION_ID;
+const REGION = process.env.REGION;
+const FUNCTION_API = `https://api.scaleway.com/functions/v1beta1/regions/${REGION}/functions/${FUNCTION_ID}`;
+const AUTH_HEADERS = { 'X-Auth-Token': process.env.SECRET_KEY };
 
 function createArchive() {
-  const zip = AdmZip()
-  zip.addLocalFolder(`${SCRIPT_DIR_NAME}/build/`, 'build')
-  zip.addLocalFolder(`${SCRIPT_DIR_NAME}/node_modules/`, 'node_modules')
-  zip.addLocalFile(`${SCRIPT_DIR_NAME}/package.json`)
-  zip.writeZip(`${SCRIPT_DIR_NAME}/${FUNCTION_ARCHIVE}`)
+  const zip = AdmZip();
+  zip.addLocalFolder(`${SCRIPT_DIR_NAME}/build/`, 'build');
+  zip.addLocalFolder(`${SCRIPT_DIR_NAME}/node_modules/`, 'node_modules');
+  zip.addLocalFile(`${SCRIPT_DIR_NAME}/package.json`);
+  zip.writeZip(`${SCRIPT_DIR_NAME}/${FUNCTION_ARCHIVE}`);
 }
 
 async function getUploadLink(zipSize) {
-  const config = {
-    headers: {
-      "X-Auth-Token": process.env.SECRET_KEY
-    }
-  }
-  const response = await axios.get(`https://api.scaleway.com/functions/v1beta1/regions/${process.env.REGION}/functions/${FUNCTION_ID}/upload-url?content_length=${zipSize}`, config)
+  const response = await axios.get(`${FUNCTION_API}/upload-url?content_length=${zipSize}`, { headers: AUTH_HEADERS });
   return response.data;
 }
 
 async function uploadZip(uploadEndpoint) {
-  const config = {
-    headers: {
-      ...uploadEndpoint.headers,
-      "X-Auth-Token": process.env.SECRET_KEY
-    }
-  }
-
   const data = fs.readFileSync(`${SCRIPT_DIR_NAME}/${FUNCTION_ARCHIVE}`);
-  const response = await axios.put(uploadEndpoint.url, data, config)
+  await axios.put(uploadEndpoint.url, data, { headers: { ...uploadEndpoint.headers, ...AUTH_HEADERS } });
 }
 
 async function deploy() {
-  const config = {
-    headers: {
-      "Content-Type": "application/json",
-      "X-Auth-Token": process.env.SECRET_KEY
-    }
-  }
-
-  axios.post(`https://api.scaleway.com/functions/v1beta1/regions/fr-par/functions/${FUNCTION_ID}/deploy`, {}, config)
-    .then(() => console.info('Function deployment launched'))
-    .catch(() => console.error('Function deployment failed'))
+  await axios.post(`${FUNCTION_API}/deploy`, {}, { headers: { 'Content-Type': 'application/json', ...AUTH_HEADERS } });
+  console.info('Function deployment launched');
 }
 
 async function main() {
-  createArchive()
+  if (!FUNCTION_ID || !REGION || !process.env.SECRET_KEY) {
+    throw new Error('FUNCTION_ID, REGION and SECRET_KEY environment variables are required');
+  }
+
+  createArchive();
   const zipSize = fs.statSync(`${SCRIPT_DIR_NAME}/${FUNCTION_ARCHIVE}`).size;
+
   const uploadEndpoint = await getUploadLink(zipSize);
-  uploadZip(uploadEndpoint);
-  deploy();
+  await uploadZip(uploadEndpoint);
+  await deploy();
 }
 
-main()
+main().catch((err) => {
+  const details = err.response ? `${err.response.status} ${JSON.stringify(err.response.data)}` : err.message;
+  console.error(`Function deployment failed: ${details}`);
+  process.exitCode = 1;
+});
