@@ -75,7 +75,7 @@ functions/src/
 
 ## Getting started
 
-Node 20 and Yarn.
+Yarn, Node 20 for `front/`, Node 26 for `functions/` (pinned in [functions/.nvmrc](functions/.nvmrc)).
 
 ```bash
 # Front: http://localhost:5173, /api is proxied to the production bucket
@@ -92,7 +92,7 @@ cd functions && yarn && yarn build && node build/main.js
 Automatic on push to `master` ([cd.yml](.github/workflows/cd.yml)), each part runs `yarn cd`:
 
 - **front**: `vite build`, then uploads `build/` to the bucket (public-read).
-- **functions**: zips `build/` + `node_modules`, uploads it to the Scaleway Function `FUNCTION_ID` and deploys it.
+- **functions**: sets the Scaleway Function runtime from `.nvmrc` (`node26`), zips `build/` + `node_modules`, uploads it to the Scaleway Function `FUNCTION_ID` and deploys it.
 
 | Variable       | Used by          | Description                               |
 |----------------|------------------|-------------------------------------------|
