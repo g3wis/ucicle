@@ -2,7 +2,7 @@ Ucicle react frontend
 =====================
 
 # Installation
-Make sure you have at least 'Node 18' installed.
+Use Node 26 (LTS). The version is pinned in `.nvmrc`, so `nvm use` in the `front` folder picks it up.
 
 Yarn is the preferred way to set up this project. To install it, follow the instructions detailed here: <https://yarnpkg.com/getting-started/install>.
 
