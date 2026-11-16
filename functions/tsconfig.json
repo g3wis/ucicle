@@ -2,7 +2,7 @@
   "compilerOptions": {
     "outDir": "build",
     "target": "ESNext",
-    "module": "ESNext",
+    "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
