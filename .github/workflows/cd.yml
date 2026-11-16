@@ -39,15 +39,12 @@ jobs:
     defaults:
       run:
         working-directory: ./functions/
-    strategy:
-      matrix:
-        node-version: [20.x]
     steps:
     - uses: actions/checkout@v3
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Use Node.js from functions/.nvmrc
       uses: actions/setup-node@v3
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version-file: './functions/.nvmrc'
         cache: 'yarn'
         cache-dependency-path: './functions/yarn.lock'
     - name: Run functions cd script

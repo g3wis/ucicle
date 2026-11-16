@@ -15,7 +15,7 @@
     "doc": "typedoc --options typedoc.json"
   },
   "engines": {
-    "node": ">=10"
+    "node": ">=26"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.363.0",
