@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-assignment -- references are set to null on purpose so JSDOM documents can be freed early */
 import axios, { AxiosResponse } from 'axios';
 import { JSDOM } from 'jsdom';
 
@@ -65,7 +66,6 @@ export async function getRiders(ranks: Rank[]): Promise<Rider[]> {
         if (i % 10 === 0) await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return (await Promise.all(riders)).filter((e) => !!e).map((e) => e!);
 }
 
