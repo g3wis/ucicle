@@ -1,9 +1,3 @@
-export type Rank = {
-    rank: string,
-    riderLink: string,
-    team: string,
-}
-
 /**
  * @param rank The UCI rank of the rider
  * @param name The name of the rider

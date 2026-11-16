@@ -1,11 +1,14 @@
 import { uploadObject } from '../s3/S3Service.js';
-import { getRankings, getRiders } from '../scrappers/proCyclingStatScrapper.js';
-import { Rank, Rider } from '../types/CyclingTypes.js';
+import { loadRiders } from '../scrappers/riderLoader.js';
+import { Rider } from '../types/CyclingTypes.js';
 import { HandlerResponse } from '../types/ResponseTypes.js';
-import { chunk } from '../utils/arrayUtils.js';
 import { getMaxMemoryConsumed } from '../utils/statUtils.js';
 
 export { handleLoadRiders };
+
+// Never replace the game data with a list too short to play: keep the previous one instead
+const MIN_RIDERS = 300;
+const MIN_SECRET_RIDER_CANDIDATES = 50;
 
 async function handleLoadRiders(): Promise<HandlerResponse> {
 
@@ -14,17 +17,11 @@ async function handleLoadRiders(): Promise<HandlerResponse> {
     if (!process.env.BUCKET_NAME) throw new Error('BUCKET_NAME environment variable not defined');
 
     try {
-        const riders: Rider[] = [];
+        const riders: Rider[] = await loadRiders();
 
-        for (let i = 0; i <= 9; i++) {
-            const rankings: Rank[] = await getRankings(i);
-            const rankingsMap: Rank[][] = chunk(rankings, 5);
-
-            // To avoid banning the ip and getting oom
-            for (const rankingsElement of rankingsMap) {
-                const riderResults: Rider[] = await getRiders(rankingsElement);
-                riders.push(...riderResults);
-            }
+        const secretRiderCandidates: number = riders.filter(rider => rider.rank <= 100).length;
+        if (riders.length < MIN_RIDERS || secretRiderCandidates < MIN_SECRET_RIDER_CANDIDATES) {
+            throw new Error(`Only ${riders.length} complete riders (${secretRiderCandidates} in the top 100), not uploading`);
         }
 
         await uploadObject(
