@@ -75,7 +75,7 @@ functions/src/
 
 ## Getting started
 
-Yarn, Node 20 for `front/`, Node 26 for `functions/` (pinned in [functions/.nvmrc](functions/.nvmrc)).
+Node 26 (LTS) and Yarn. Each part pins its version in its own `.nvmrc` ([front/.nvmrc](front/.nvmrc), [functions/.nvmrc](functions/.nvmrc)).
 
 ```bash
 # Front: http://localhost:5173, /api is proxied to the production bucket
