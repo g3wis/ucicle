@@ -1,17 +1,13 @@
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { GameParticipation } from '../types/GameType';
 import { Rider } from '../types/CyclingTypes';
-import { convertToMin2Digit } from '../utils/numberUtils';
 
 const gameHistoryKey = 'game-history';
 
+const getTodayDate = (): string => dayjs().format('YYYYMMDD');
+
 export function addGameSession(secret: Rider, guesses: Rider[], success: boolean) {
-  const dateDayjs: Dayjs = dayjs();
-  const date: string = dateDayjs.year().toString()
-    .concat(
-      convertToMin2Digit(dateDayjs.month())
-        .concat(convertToMin2Digit(dateDayjs.date())),
-    );
+  const date: string = getTodayDate();
   const gameHistory: GameParticipation[] = JSON.parse(localStorage.getItem(gameHistoryKey) ?? '[]');
   const newGameHistory: GameParticipation[] = [
     ...gameHistory.filter((gameSession: GameParticipation) => gameSession.date !== date),
@@ -28,12 +24,7 @@ export function getGameHistory() {
 }
 
 export function getTodayGameSession(gameHistory: GameParticipation[]) {
-  const dateDayjs: Dayjs = dayjs();
-  const date: string = dateDayjs.year().toString()
-    .concat(
-      convertToMin2Digit(dateDayjs.month())
-        .concat(convertToMin2Digit(dateDayjs.date())),
-    );
+  const date: string = getTodayDate();
   return gameHistory.filter((gameSession: GameParticipation) => gameSession.date === date)?.[0] ?? null;
 }
 

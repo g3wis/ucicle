@@ -5,7 +5,6 @@ import { uploadObject } from '../s3/S3Service.js';
 import { Rider } from '../types/CyclingTypes.js';
 import { GameSession } from '../types/GameType.js';
 import { HandlerResponse } from '../types/ResponseTypes.js';
-import { convertToMin2Digit } from '../utils/numberUtils.js';
 import { getMaxMemoryConsumed, memoryStats } from '../utils/statUtils.js';
 
 export { handleGenerateSecretRider };
@@ -18,17 +17,12 @@ async function handleGenerateSecretRider(): Promise<HandlerResponse> {
     if (!process.env.BUCKET_NAME) throw new Error('BUCKET_NAME environment variable not defined');
 
     try {
-        const dateDayjs = dayjs();
-        const date: string = dateDayjs.year().toString()
-          .concat(
-            convertToMin2Digit(dateDayjs.month())
-              .concat(convertToMin2Digit(dateDayjs.date())),
-          );
+        const date: string = dayjs().format('YYYYMMDD');
         const ridersResponse: AxiosResponse<Rider[]> = await axios.get(`http://${process.env.BUCKET_NAME}.${process.env.DOMAIN}/api/riders.json`);
 
-        const top200: Rider[] = ridersResponse.data.filter((rider: Rider) => rider.rank <= 100);
-        const randomIndex: number = Math.floor(Math.random() * (top200.length + 1));
-        const randomRider: Rider = top200[randomIndex];
+        const top100: Rider[] = ridersResponse.data.filter((rider: Rider) => rider.rank <= 100);
+        const randomIndex: number = Math.floor(Math.random() * top100.length);
+        const randomRider: Rider = top100[randomIndex];
 
         const gameSession: GameSession = {
             rider: randomRider,
