@@ -1,5 +1,5 @@
 import { Rider } from '../types/CyclingTypes';
-import { compareRiders, toCm } from './compare';
+import { compareRiders, toCm, Trend } from './compare';
 
 /** What the tries prove about one numeric attribute, as inclusive integer bounds. */
 export type Range = { min?: number, max?: number, exact?: number };
@@ -16,16 +16,18 @@ export type Knowledge = {
   empty: boolean,
 };
 
-function narrow(range: Range, value: number, t: 'eq' | 'up' | 'down'): Range {
-  if (range.exact !== undefined) return range;
+function narrow(range: Range, value: number | null, t: Trend): Range {
+  // An unknown value proves nothing.
+  if (range.exact !== undefined || value === null || t === 'unknown') return range;
   if (t === 'eq') return { exact: value };
   // Values are whole numbers (years, cm, kg): "higher than 26" is "27 or more".
   if (t === 'up') return { ...range, min: Math.max(range.min ?? -Infinity, value + 1) };
   return { ...range, max: Math.min(range.max ?? Infinity, value - 1) };
 }
 
-function identify(identity: Identity, value: string, same: 'eq' | 'no'): Identity {
-  if (identity.exact !== undefined) return identity;
+function identify(identity: Identity, value: string | null, same: 'eq' | 'no'): Identity {
+  // "No UCI team" rules nothing out: the mystery rider always has one.
+  if (identity.exact !== undefined || value === null) return identity;
   if (same === 'eq') return { exact: value, excluded: [] };
   return identity.excluded.includes(value) ? identity : { ...identity, excluded: [...identity.excluded, value] };
 }

@@ -49,8 +49,9 @@
     }
   }
 
-  // A different country: the value in secondary ink, no fill.
-  &[data-state='no'] {
+  // A different country, or a value the data does not have ("?"): secondary ink, no fill.
+  &[data-state='no'],
+  &[data-state='unknown'] {
     color: var(--ink-2);
   }
 }

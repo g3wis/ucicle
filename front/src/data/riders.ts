@@ -37,7 +37,7 @@ export type RiderMatch = { rider: Rider, start: number, length: number };
 
 /**
  * Riders whose name matches the query, best first: whole-name prefix, then a word prefix,
- * then anywhere; ties by UCI rank. `start`/`length` locate the typed part in the name.
+ * then anywhere; ties by UCI rank, then by name. `start`/`length` locate the typed part in the name.
  */
 export function matchRiders(riders: Rider[], query: string, limit = 6): RiderMatch[] {
   const q = queryKey(query);
@@ -57,7 +57,10 @@ export function matchRiders(riders: Rider[], query: string, limit = 6): RiderMat
     scored.push({ match: { rider, start: index, length: q.length }, score });
   });
   return scored
-    .sort((a, b) => a.score - b.score || a.match.rider.rank - b.match.rider.rank)
+    // Former riders, out of the ranking (rank null), come after the ranked ones.
+    .sort((a, b) => a.score - b.score
+      || (a.match.rider.rank ?? Infinity) - (b.match.rider.rank ?? Infinity)
+      || a.match.rider.name.localeCompare(b.match.rider.name))
     .slice(0, limit)
     .map((s) => s.match);
 }

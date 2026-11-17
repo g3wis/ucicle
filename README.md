@@ -5,21 +5,21 @@ Inspired by [Wordle](https://www.nytimes.com/games/wordle/index.html) and [Poelt
 
 ## Rules
 
-- **One mystery rider per day**, drawn from the **UCI top 100**. A new one is published every day at 05:00 (cron `0 5 * * *`).
-- You can guess any rider from the **UCI top 1000**.
+- **One mystery rider per day**, drawn from the **current UCI top 100** (riders whose team, height, weight and best result are known). A new one is published every day at 05:00 (cron `0 5 * * *`).
+- You can guess any rider from the **current UCI top 1000**, and any **former top 100 rider of a UCI ranking since 2016**, retired ones included (Froome, Nibali, Valverde…). A rider who left the ranking keeps their last UCI team; a rider of a club or a national team shows *Sans équipe UCI*.
 - **5 tries** maximum.
 - **Starting hint**: the mystery rider's best result, e.g. *"2 times 1st of the mountains classification of Tour de France in 2022 and 2023"*.
 - **After each guess**, every attribute is compared to the mystery rider:
 
   | Attribute            | Feedback on the guess bib                                                        |
   |----------------------|----------------------------------------------------------------------------------|
-  | Age, height, weight  | value with its unit; ↑ the mystery rider's is higher, ↓ lower; equal: blue cell with ✓ |
+  | Age, height, weight  | value with its unit; ↑ the mystery rider's is higher, ↓ lower; equal: blue cell with ✓; `?` in grey when the data has no height or weight for the guessed rider |
   | Country              | same: blue cell with ✓; different: the code in grey                              |
   | Team                 | on the bib's foot band; same: a blue ✓ tile before the name                      |
 
   What each try proves is also written on the mystery bib (bounds, country, team).
 
-- **End of game**: right name → win. 5th wrong guess → lose. The mystery bib turns over and shows the rider; its number becomes the score (`3/5` or `X/5`). *Partager* opens the phone's share sheet (clipboard elsewhere) with a result that never names the rider (🔺/🔻: the mystery rider's value is higher/lower, 🟦 same, ⬛ different):
+- **End of game**: right name → win. 5th wrong guess → lose. The mystery bib turns over and shows the rider; its number becomes the score (`3/5` or `X/5`). *Partager* opens the phone's share sheet (clipboard elsewhere) with a result that never names the rider (🔺/🔻: the mystery rider's value is higher/lower, 🟦 same, ⬛ different, ⬜ unknown):
   ```
   Ucicle #1, trouvé en 3/5 🚴
   🔺🔺🔺⬛⬛
@@ -53,15 +53,17 @@ A single entry point, `handler` in [functions/src/index.ts](functions/src/index.
 
 | Action                  | Cron                  | What it does                                                                                       | Output                 |
 |-------------------------|-----------------------|----------------------------------------------------------------------------------------------------|------------------------|
-| `LOAD_RIDERS`           | `0 0 1 * *` (monthly) | Loads the UCI top 1000 from the UCI World Ranking, height/weight from Wikidata/Wikipedia, best result from each rider's UCI results ([sources](functions/README.md#data-sources)). Drops riders with incomplete data. | `api/riders.json`      |
+| `LOAD_RIDERS`           | `0 0 1 * *` (monthly) | Loads the current UCI top 1000 and the former top 100 riders of every ranking since 2016 from the UCI World Ranking, height/weight from Wikidata/Wikipedia (null when unknown), and the best result of the secret rider candidates from their UCI results ([sources](functions/README.md#data-sources)). Drops only riders without country. | `api/riders.json`      |
 | `GENERATE_SECRET_RIDER` | `0 5 * * *` (daily)   | Picks a random rider with UCI rank ≤ 100 from `riders.json`.                                       | `api/secret_rider.json`|
 
 ### Data contract
 
 ```ts
 Rider       = { rank, name, country, age, weight, height, team, bestResult }
+              // rank null: former rider out of the ranking; weight, height null: unknown; team null: no UCI team;
+              // bestResult only for the secret rider candidates (current top 100 with height and weight), null otherwise
 BestResult  = { race, rank, raceType: 'GC' | 'Point GC' | 'KOM' | 'stage' | 'race', recurrence, years[] }
-GameSession = { date: 'YYYYMMDD', rider }   // content of secret_rider.json
+GameSession = { date: 'YYYYMMDD', rider }   // content of secret_rider.json; rider is always complete
 ```
 
 ⚠️ These types are **duplicated** in `front/src/types/` and `functions/src/types/`. Change both together.

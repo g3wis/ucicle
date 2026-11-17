@@ -2,6 +2,7 @@ import { uploadObject } from '../s3/S3Service.js';
 import { loadRiders } from '../scrappers/riderLoader.js';
 import { Rider } from '../types/CyclingTypes.js';
 import { HandlerResponse } from '../types/ResponseTypes.js';
+import { isSecretRiderCandidate } from '../utils/riderUtils.js';
 import { getMaxMemoryConsumed } from '../utils/statUtils.js';
 
 export { handleLoadRiders };
@@ -19,9 +20,9 @@ async function handleLoadRiders(): Promise<HandlerResponse> {
     try {
         const riders: Rider[] = await loadRiders();
 
-        const secretRiderCandidates: number = riders.filter(rider => rider.rank <= 100).length;
+        const secretRiderCandidates: number = riders.filter(isSecretRiderCandidate).length;
         if (riders.length < MIN_RIDERS || secretRiderCandidates < MIN_SECRET_RIDER_CANDIDATES) {
-            throw new Error(`Only ${riders.length} complete riders (${secretRiderCandidates} in the top 100), not uploading`);
+            throw new Error(`Only ${riders.length} riders (${secretRiderCandidates} secret rider candidates), not uploading`);
         }
 
         await uploadObject(

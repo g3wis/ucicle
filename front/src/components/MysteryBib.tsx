@@ -2,7 +2,7 @@ import React, {
   ReactNode, useEffect, useId, useState,
 } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { Rider } from '../types/CyclingTypes';
+import { SecretRider } from '../types/CyclingTypes';
 import { Knowledge } from '../game/knowledge';
 import { cellsFor } from '../game/cells';
 import { MAX_TRIES } from '../game/compare';
@@ -21,7 +21,7 @@ export type MysteryOutcome = { found: boolean, tries: number };
 
 type Props = {
   date: string,
-  mystery: Rider,
+  mystery: SecretRider,
   knowledge: Knowledge,
   /** The game is over: the bib is turned over and shows the rider. */
   revealed: boolean,
