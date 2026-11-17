@@ -1,0 +1,101 @@
+// Four values per bib, printed as one ruled line like a results sheet: a rule above and below,
+// a rule between the values, no box. State is told three ways: fill, icon, text. The only filled
+// shape on a bib is a match. Cells are not interactive and never look tappable.
+
+.cells {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--ink-line);
+  border-bottom: 1px solid var(--ink-line);
+}
+
+.cell {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 4px;
+  color: var(--ink);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  // When value and arrow do not fit (320 px, enlarged text), the arrow wraps under the value.
+  flex-wrap: wrap;
+  align-content: center;
+  row-gap: 0;
+  text-align: center;
+  line-height: 1.15;
+
+  & + & {
+    border-left: 1px solid var(--ink-line);
+  }
+
+  // A match: a solid blue block, inset 2 px inside its slot of the line, square corners.
+  &[data-state='eq'] {
+    color: var(--on-same);
+    font-weight: 700;
+
+    &::before {
+      content: '';
+      position: absolute;
+      z-index: -1;
+      inset: 2px;
+      border-radius: var(--r-cell);
+      background: var(--same);
+    }
+  }
+
+  // A different country: the value in secondary ink, no fill.
+  &[data-state='no'] {
+    color: var(--ink-2);
+  }
+}
+
+// A value wider than the whole cell shows an ellipsis, never a silent cut.
+.cell-value {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.cell-icon {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.6;
+}
+
+@media (min-width: 420px) {
+  .cell {
+    gap: 3px;
+    font-size: var(--fs-sm);
+  }
+
+  .cell-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (forced-colors: active) {
+  // On a printed line, each value gets its 2 px boundary back (only here), and a match keeps
+  // a fill: the system highlight.
+  .cell,
+  .cell + .cell {
+    border: 2px solid CanvasText;
+  }
+
+  .cell[data-state='eq'] {
+    forced-color-adjust: none;
+    color: HighlightText;
+
+    &::before {
+      forced-color-adjust: none;
+      background: Highlight;
+    }
+  }
+}

@@ -1,0 +1,169 @@
+// The rider field and its list, then the validate button.
+
+.rider-picker {
+  min-width: 0;
+}
+
+// While the field has focus on a phone: room under the footer, behind the keyboard, so the
+// active slot can always rise under the header and the list opens above the keyboard.
+html.is-picking body {
+  padding-bottom: 60vh;
+}
+
+.try-label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 700;
+  font-size: var(--fs-sm);
+}
+
+.rider-field {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+// The field is the next bib's blank name line: printed on Tyvek, ink text. Tyvek on the road is
+// its own boundary (12.7:1): no grey border. The focus ring sits inside the sheet, in the bib's
+// blue (on Tyvek, 5.4:1).
+.rider-input {
+  position: relative;
+}
+
+.rider-input input {
+  --focus: var(--focus-on-tyvek);
+
+  width: 100%;
+  height: 48px;
+  padding: 0 var(--sp-3);
+  border: 0;
+  border-radius: var(--r-bib);
+  background: var(--tyvek);
+  color: var(--ink);
+  font-size: var(--fs-base);
+  box-shadow: 0 1px 0 rgb(0 0 0 / 35%);
+
+  &::placeholder {
+    color: var(--ink-2);
+    opacity: 1;
+  }
+
+  &:focus-visible {
+    outline-offset: -3px;
+  }
+
+  // The list is open: the field and the list are one sheet.
+  &[aria-expanded='true'] {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    box-shadow: none;
+  }
+}
+
+// The list opens from the same sheet: flush under the field, the same Tyvek, a printed rule
+// between them, the bib's flat edge (no blur).
+.rider-options {
+  --focus: var(--focus-on-tyvek);
+
+  position: absolute;
+  z-index: 15;
+  top: 100%;
+  left: 0;
+  right: 0;
+  display: grid;
+  gap: 2px;
+  padding: var(--sp-1);
+  border-top: 1px solid var(--ink-line);
+  border-radius: 0 0 var(--r-bib) var(--r-bib);
+  background: var(--tyvek);
+  color: var(--ink);
+  box-shadow: 0 1px 0 rgb(0 0 0 / 35%);
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.rider-option {
+  display: grid;
+  gap: 1px;
+  min-height: 48px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+
+  &[aria-selected='true'] {
+    background: var(--ink);
+    color: var(--tyvek);
+
+    .rider-option-meta {
+      color: var(--tyvek-shade);
+    }
+  }
+
+  &[aria-disabled='true'] {
+    color: var(--ink-2);
+    cursor: not-allowed;
+  }
+}
+
+.rider-option-name {
+  font-weight: 500;
+
+  b {
+    font-weight: 800;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 2px;
+  }
+}
+
+.rider-option-meta {
+  display: flex;
+  gap: var(--sp-2);
+  min-width: 0;
+  color: var(--ink-2);
+  font-size: var(--fs-xs);
+}
+
+.rider-option-country {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.rider-option-team {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rider-option-none {
+  padding: var(--sp-3);
+  color: var(--ink-2);
+}
+
+.validate {
+  width: 100%;
+  min-width: 0;
+}
+
+.validate-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rider-option:not([aria-disabled='true']):not([aria-selected='true']):hover {
+    background: var(--tyvek-shade);
+  }
+}
+
+@media (min-width: 480px) {
+  .rider-field {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .validate {
+    width: auto;
+    max-width: 260px;
+  }
+}

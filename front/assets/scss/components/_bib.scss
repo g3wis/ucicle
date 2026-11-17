@@ -1,0 +1,244 @@
+// The bib: Tyvek, ink, safety pins, top band, foot band. Every pinned bib shares this frame.
+
+.bib {
+  --focus: var(--focus-on-tyvek);
+
+  position: relative;
+  background: var(--tyvek);
+  color: var(--ink);
+  border-radius: var(--r-bib);
+  box-shadow: 0 1px 0 rgb(0 0 0 / 35%);
+}
+
+.bib-number {
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-numeral);
+  font-weight: 900;
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+}
+
+.bib-band {
+  padding: var(--sp-2) 44px;
+  border-radius: var(--r-bib) var(--r-bib) 0 0;
+  background: var(--ink);
+  color: var(--tyvek);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-sm);
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+// The foot band is printed like the top band (D20): the band type, so the two bands of a bib
+// rhyme. The team name may end in an ellipsis; the full name stays in the text.
+.bib-foot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 4px var(--sp-3) 4px calc(var(--bib-column) + var(--sp-2));
+  border-radius: 0 0 var(--r-bib) var(--r-bib);
+  background: var(--ink);
+  color: var(--tyvek);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-sm);
+  line-height: 1.2;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+
+  // The full blue band: only where the team is the proved fact (the mystery bib's front once the
+  // team is proved, the turned bib on a win). A guess bib's same team is a tile (D23).
+  &[data-state='eq'] {
+    background: var(--same);
+    color: var(--on-same);
+  }
+}
+
+.bib-foot-icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.5;
+}
+
+// A guess bib's "same team" (D23): blue scales with what a try proves. The band stays ink and a
+// blue check tile, the fill and check of a matching cell, sits before the team name.
+.bib-foot-tile {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--r-cell);
+  background: var(--same);
+  color: var(--on-same);
+
+  .bib-foot-icon {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2.6;
+  }
+}
+
+.bib-foot-team {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+// Safety pins, one per corner. Each bib was pinned by hand: its own angle and offset (±2 px) at
+// each corner, set by components/Pin per bib (--pin-<corner>-rotate, -x, -y; the fallbacks are
+// the mystery bib's). Static: never animated, never tied to hover. Mirrored pins keep their
+// scaleX on the svg.
+.pin-wrap {
+  position: absolute;
+  z-index: 1;
+  display: block;
+  width: 30px;
+  height: 11px;
+  line-height: 0;
+  pointer-events: none;
+}
+
+.pin-wrap-tl {
+  top: 6px;
+  left: 7px;
+  rotate: var(--pin-tl-rotate, -14deg);
+  translate: var(--pin-tl-x, 0px) var(--pin-tl-y, 0px);
+}
+
+.pin-wrap-tr {
+  top: 6px;
+  right: 7px;
+  rotate: var(--pin-tr-rotate, 12deg);
+  translate: var(--pin-tr-x, 0px) var(--pin-tr-y, 0px);
+}
+
+.pin-wrap-bl {
+  bottom: 6px;
+  left: 7px;
+  rotate: var(--pin-bl-rotate, 10deg);
+  translate: var(--pin-bl-x, 0px) var(--pin-bl-y, 0px);
+}
+
+.pin-wrap-br {
+  bottom: 6px;
+  right: 7px;
+  rotate: var(--pin-br-rotate, -12deg);
+  translate: var(--pin-br-x, 0px) var(--pin-br-y, 0px);
+}
+
+.pin {
+  display: block;
+  width: 30px;
+  height: 11px;
+}
+
+.pin-wrap-tr .pin,
+.pin-wrap-br .pin {
+  transform: scaleX(-1);
+}
+
+// The hole the pin punched in the Tyvek, under the coil: the pin reads as metal through the sheet.
+.pin-hole {
+  fill: var(--tarmac);
+  fill-opacity: 0.6;
+}
+
+.pin-wire {
+  fill: none;
+  stroke: var(--pin);
+  stroke-width: 1.3;
+  stroke-linecap: round;
+}
+
+// The clasp hood over the point, darker than the wires.
+.pin-hood {
+  fill: var(--pin-dark);
+}
+
+// A pinned guess: number on the left, rider and cells, team on the foot band. The numeral
+// column runs the full height of the bib body, so bib 5 can fill it red.
+.guess-bib {
+  display: grid;
+  grid-template-columns: var(--bib-column) minmax(0, 1fr);
+  grid-template-areas:
+    'num body'
+    'foot foot';
+
+  .bib-number {
+    grid-area: num;
+    align-self: stretch;
+    display: grid;
+    place-items: center;
+    padding: 20px 0 10px;
+    border-top-left-radius: var(--r-bib);
+    font-size: var(--fs-bib-number);
+  }
+
+  // Name and values start on the team's left edge, clear of the numeral column (red on bib 5).
+  .bib-body {
+    grid-area: body;
+    min-width: 0;
+    padding: 20px var(--sp-3) var(--sp-3) var(--sp-2);
+  }
+
+  .bib-foot {
+    grid-area: foot;
+    // The team stays clear of the bottom-right pin.
+    padding-right: 44px;
+  }
+}
+
+.guess-name {
+  margin-bottom: var(--sp-2);
+  overflow: hidden;
+  font-size: var(--fs-md);
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+// The fifth bib is the red bib of the most combative rider: last chance. Its numeral column is
+// red for the full height of the body, the 5 printed in Tyvek (5.5:1).
+.guess-bib.bib-red .bib-number {
+  background: var(--red);
+  color: var(--tyvek);
+}
+
+// On the red column, the top-left pin turns light so it stays visible.
+.guess-bib.bib-red .pin-wrap-tl {
+  --pin: var(--tyvek-shade);
+  --pin-dark: var(--tyvek);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  // Hover tilt: a displacement, so it exists only when motion is welcome.
+  .guess-bib {
+    transition: rotate var(--dur-fast) var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .guess-bib:hover {
+      rotate: 0.6deg;
+    }
+  }
+}
+
+@media (forced-colors: active) {
+  // The proved-team band and the same-team tile keep a fill: the system highlight.
+  .bib-foot[data-state='eq'],
+  .bib-foot-tile {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+}

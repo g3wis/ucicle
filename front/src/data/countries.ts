@@ -1,0 +1,120 @@
+import type { Lang } from '../i18n/language';
+
+/**
+ * Country slugs of the data (riders.json) to their three-letter UCI / IOC code and their name.
+ * Codes are the ones UCI results use. The loader builds slugs from DataRide's NationFullName, so
+ * one nation may have several spellings. A slug missing here shows the nation's name, never an
+ * invented code.
+ */
+const COUNTRIES: Record<string, { code: string, fr: string, en: string }> = {
+  albania: { code: 'ALB', fr: 'Albanie', en: 'Albania' },
+  algeria: { code: 'ALG', fr: 'Algérie', en: 'Algeria' },
+  argentina: { code: 'ARG', fr: 'Argentine', en: 'Argentina' },
+  australia: { code: 'AUS', fr: 'Australie', en: 'Australia' },
+  austria: { code: 'AUT', fr: 'Autriche', en: 'Austria' },
+  belarus: { code: 'BLR', fr: 'Biélorussie', en: 'Belarus' },
+  belgium: { code: 'BEL', fr: 'Belgique', en: 'Belgium' },
+  benin: { code: 'BEN', fr: 'Bénin', en: 'Benin' },
+  bermuda: { code: 'BER', fr: 'Bermudes', en: 'Bermuda' },
+  bolivia: { code: 'BOL', fr: 'Bolivie', en: 'Bolivia' },
+  'bosnia-and-herzegovina': { code: 'BIH', fr: 'Bosnie-Herzégovine', en: 'Bosnia and Herzegovina' },
+  brazil: { code: 'BRA', fr: 'Brésil', en: 'Brazil' },
+  bulgaria: { code: 'BUL', fr: 'Bulgarie', en: 'Bulgaria' },
+  'burkina-faso': { code: 'BUR', fr: 'Burkina Faso', en: 'Burkina Faso' },
+  canada: { code: 'CAN', fr: 'Canada', en: 'Canada' },
+  chile: { code: 'CHI', fr: 'Chili', en: 'Chile' },
+  china: { code: 'CHN', fr: 'Chine', en: 'China' },
+  colombia: { code: 'COL', fr: 'Colombie', en: 'Colombia' },
+  'costa-rica': { code: 'CRC', fr: 'Costa Rica', en: 'Costa Rica' },
+  croatia: { code: 'CRO', fr: 'Croatie', en: 'Croatia' },
+  cuba: { code: 'CUB', fr: 'Cuba', en: 'Cuba' },
+  cyprus: { code: 'CYP', fr: 'Chypre', en: 'Cyprus' },
+  'czech-republic': { code: 'CZE', fr: 'Tchéquie', en: 'Czechia' },
+  czechia: { code: 'CZE', fr: 'Tchéquie', en: 'Czechia' },
+  denmark: { code: 'DEN', fr: 'Danemark', en: 'Denmark' },
+  'dominican-republic': { code: 'DOM', fr: 'République dominicaine', en: 'Dominican Republic' },
+  ecuador: { code: 'ECU', fr: 'Équateur', en: 'Ecuador' },
+  'el-salvador': { code: 'ESA', fr: 'Salvador', en: 'El Salvador' },
+  eritrea: { code: 'ERI', fr: 'Érythrée', en: 'Eritrea' },
+  estonia: { code: 'EST', fr: 'Estonie', en: 'Estonia' },
+  ethiopia: { code: 'ETH', fr: 'Éthiopie', en: 'Ethiopia' },
+  finland: { code: 'FIN', fr: 'Finlande', en: 'Finland' },
+  france: { code: 'FRA', fr: 'France', en: 'France' },
+  georgia: { code: 'GEO', fr: 'Géorgie', en: 'Georgia' },
+  germany: { code: 'GER', fr: 'Allemagne', en: 'Germany' },
+  'great-britain': { code: 'GBR', fr: 'Grande-Bretagne', en: 'Great Britain' },
+  greece: { code: 'GRE', fr: 'Grèce', en: 'Greece' },
+  guatemala: { code: 'GUA', fr: 'Guatemala', en: 'Guatemala' },
+  'hong-kong-china': { code: 'HKG', fr: 'Hong Kong', en: 'Hong Kong' },
+  hungary: { code: 'HUN', fr: 'Hongrie', en: 'Hungary' },
+  iceland: { code: 'ISL', fr: 'Islande', en: 'Iceland' },
+  india: { code: 'IND', fr: 'Inde', en: 'India' },
+  'individual-neutral-athletes': { code: 'AIN', fr: 'Athlètes neutres', en: 'Neutral athletes' },
+  indonesia: { code: 'INA', fr: 'Indonésie', en: 'Indonesia' },
+  iran: { code: 'IRI', fr: 'Iran', en: 'Iran' },
+  ireland: { code: 'IRL', fr: 'Irlande', en: 'Ireland' },
+  israel: { code: 'ISR', fr: 'Israël', en: 'Israel' },
+  italy: { code: 'ITA', fr: 'Italie', en: 'Italy' },
+  japan: { code: 'JPN', fr: 'Japon', en: 'Japan' },
+  kazakhstan: { code: 'KAZ', fr: 'Kazakhstan', en: 'Kazakhstan' },
+  kenya: { code: 'KEN', fr: 'Kenya', en: 'Kenya' },
+  korea: { code: 'KOR', fr: 'Corée du Sud', en: 'South Korea' },
+  kosovo: { code: 'KOS', fr: 'Kosovo', en: 'Kosovo' },
+  laos: { code: 'LAO', fr: 'Laos', en: 'Laos' },
+  latvia: { code: 'LAT', fr: 'Lettonie', en: 'Latvia' },
+  lithuania: { code: 'LTU', fr: 'Lituanie', en: 'Lithuania' },
+  luxembourg: { code: 'LUX', fr: 'Luxembourg', en: 'Luxembourg' },
+  malaysia: { code: 'MAS', fr: 'Malaisie', en: 'Malaysia' },
+  mexico: { code: 'MEX', fr: 'Mexique', en: 'Mexico' },
+  moldova: { code: 'MDA', fr: 'Moldavie', en: 'Moldova' },
+  monaco: { code: 'MON', fr: 'Monaco', en: 'Monaco' },
+  mongolia: { code: 'MGL', fr: 'Mongolie', en: 'Mongolia' },
+  montenegro: { code: 'MNE', fr: 'Monténégro', en: 'Montenegro' },
+  morocco: { code: 'MAR', fr: 'Maroc', en: 'Morocco' },
+  namibia: { code: 'NAM', fr: 'Namibie', en: 'Namibia' },
+  netherlands: { code: 'NED', fr: 'Pays-Bas', en: 'Netherlands' },
+  'new-zealand': { code: 'NZL', fr: 'Nouvelle-Zélande', en: 'New Zealand' },
+  'north-macedonia': { code: 'MKD', fr: 'Macédoine du Nord', en: 'North Macedonia' },
+  norway: { code: 'NOR', fr: 'Norvège', en: 'Norway' },
+  panama: { code: 'PAN', fr: 'Panama', en: 'Panama' },
+  paraguay: { code: 'PAR', fr: 'Paraguay', en: 'Paraguay' },
+  peru: { code: 'PER', fr: 'Pérou', en: 'Peru' },
+  philippines: { code: 'PHI', fr: 'Philippines', en: 'Philippines' },
+  poland: { code: 'POL', fr: 'Pologne', en: 'Poland' },
+  portugal: { code: 'POR', fr: 'Portugal', en: 'Portugal' },
+  'republic-of-korea': { code: 'KOR', fr: 'Corée du Sud', en: 'South Korea' },
+  romania: { code: 'ROU', fr: 'Roumanie', en: 'Romania' },
+  russia: { code: 'RUS', fr: 'Russie', en: 'Russia' },
+  rwanda: { code: 'RWA', fr: 'Rwanda', en: 'Rwanda' },
+  serbia: { code: 'SRB', fr: 'Serbie', en: 'Serbia' },
+  slovakia: { code: 'SVK', fr: 'Slovaquie', en: 'Slovakia' },
+  slovenia: { code: 'SLO', fr: 'Slovénie', en: 'Slovenia' },
+  'south-africa': { code: 'RSA', fr: 'Afrique du Sud', en: 'South Africa' },
+  spain: { code: 'ESP', fr: 'Espagne', en: 'Spain' },
+  sweden: { code: 'SWE', fr: 'Suède', en: 'Sweden' },
+  switzerland: { code: 'SUI', fr: 'Suisse', en: 'Switzerland' },
+  thailand: { code: 'THA', fr: 'Thaïlande', en: 'Thailand' },
+  tunisia: { code: 'TUN', fr: 'Tunisie', en: 'Tunisia' },
+  turkey: { code: 'TUR', fr: 'Turquie', en: 'Türkiye' },
+  türkiye: { code: 'TUR', fr: 'Turquie', en: 'Türkiye' },
+  uganda: { code: 'UGA', fr: 'Ouganda', en: 'Uganda' },
+  ukraine: { code: 'UKR', fr: 'Ukraine', en: 'Ukraine' },
+  'united-states': { code: 'USA', fr: 'États-Unis', en: 'United States' },
+  'united-states-of-america': { code: 'USA', fr: 'États-Unis', en: 'United States' },
+  uruguay: { code: 'URU', fr: 'Uruguay', en: 'Uruguay' },
+  uzbekistan: { code: 'UZB', fr: 'Ouzbékistan', en: 'Uzbekistan' },
+  venezuela: { code: 'VEN', fr: 'Venezuela', en: 'Venezuela' },
+};
+
+const titleCase = (slug: string): string => slug
+  .split('-')
+  .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+  .join(' ');
+
+export function countryCode(slug: string): string {
+  return COUNTRIES[slug]?.code ?? titleCase(slug);
+}
+
+export function countryName(slug: string, lang: Lang): string {
+  return COUNTRIES[slug]?.[lang] ?? titleCase(slug);
+}

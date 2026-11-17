@@ -1,0 +1,119 @@
+// Owner: rules clone. Styles of the About page (/a-propos/, /en/about/): one reading column on
+// the tarmac, titles in the band type. The example bib lives in the Help panel only (D18).
+
+.about {
+  flex: 1;
+  width: 100%;
+  padding: var(--sp-6) var(--gutter-right) var(--sp-7) var(--gutter-left);
+}
+
+// About 70 characters a line at the body size.
+.about-column {
+  max-width: 34rem;
+  margin: 0 auto;
+  font-size: var(--fs-md);
+  line-height: 1.55;
+
+  p,
+  li {
+    text-wrap: pretty;
+  }
+
+  a {
+    text-underline-offset: 3px;
+  }
+}
+
+.about-title {
+  margin-bottom: var(--sp-5);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-xl);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+// Sections are set apart by the same rule as the header and the footer.
+.about-section {
+  display: grid;
+  gap: var(--sp-3);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--tarmac-rule);
+
+  & + & {
+    margin-top: var(--sp-6);
+  }
+}
+
+.about-heading {
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-lg);
+  line-height: 1.15;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.about-subheading {
+  margin-top: var(--sp-3);
+  color: var(--on-tarmac-2);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-sm);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+// The data sheet: a label, then what it says. Side by side once the column is wide enough.
+.about-facts {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+}
+
+.about-fact {
+  display: grid;
+  gap: 2px;
+
+  dt {
+    color: var(--on-tarmac-2);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+// A section's actions: one button, or the rules' two (Lire l'aide, then the way back to the
+// board), side by side while they fit, one under the other on a narrow phone.
+.about-link {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-top: var(--sp-1);
+
+  .button {
+    text-decoration: none;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .about-column a:not(.button):hover {
+    text-decoration-thickness: 2px;
+  }
+}
+
+@media (min-width: 640px) {
+  .about-fact {
+    grid-template-columns: 10rem minmax(0, 1fr);
+    gap: var(--sp-4);
+    align-items: baseline;
+  }
+}

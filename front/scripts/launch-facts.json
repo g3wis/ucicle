@@ -1,0 +1,11 @@
+{
+  "_comment": "Facts the owner must supply or confirm before the redesign goes live. Set confirmed to true once done. `yarn build` lists what is still open; LAUNCH_STRICT=1 yarn build fails while anything is open.",
+  "facts": [
+    { "id": "legal", "confirmed": false, "what": "Legal mentions (LCEN): publisher identity, host details (Scaleway), a contact. Add them to src/content/about.ts (privacy section)." },
+    { "id": "stage-origin", "confirmed": false, "what": "The date of 'Étape 1' (STAGE_ORIGIN in src/game/stage.ts, today 20261116 as an assumption). It must never change once published." },
+    { "id": "report-error", "confirmed": false, "what": "May https://github.com/g3wis/ucicle/issues be shown to players as the place to report a data error?" },
+    { "id": "no-ads", "confirmed": false, "what": "Commit (or not) to 'sans publicité / no advertising' on the About page; it is left out until confirmed." },
+    { "id": "data-fresh", "confirmed": false, "what": "The live riders.json looks about 2023 (ages, teams such as Jumbo-Visma). Run the DataRide loader (functions LOAD_RIDERS) so the About page's data description and the board match reality." },
+    { "id": "gzip-check", "confirmed": false, "what": "After the first deploy with the new deploy.js: curl -sI --compressed https://www.ucicle.fr/ shows content-encoding: gzip and the page loads." }
+  ]
+}

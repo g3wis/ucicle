@@ -1,0 +1,138 @@
+// Panels: a bottom sheet on phones, a right-hand panel from 768 px.
+
+.panel-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.panel-backdrop {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background: rgb(10 11 13 / 62%);
+  cursor: default;
+}
+
+.panel {
+  position: relative;
+  width: 100%;
+  max-height: 88vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 var(--gutter-right) calc(var(--sp-5) + env(safe-area-inset-bottom, 0px)) var(--gutter-left);
+  border-top: 1px solid var(--tarmac-line);
+  border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+  background: var(--tarmac);
+  color: var(--on-tarmac);
+}
+
+.panel-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) 0;
+  background: var(--tarmac);
+}
+
+.panel-title {
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-lg);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.panel-body {
+  display: grid;
+  gap: var(--sp-5);
+}
+
+@media (min-width: 768px) {
+  .panel-layer {
+    align-items: stretch;
+    justify-content: flex-end;
+  }
+
+  .panel {
+    width: 440px;
+    max-height: none;
+    height: 100%;
+    padding: 0 var(--sp-5) var(--sp-6);
+    border-top: 0;
+    border-left: 1px solid var(--tarmac-line);
+    border-radius: 0;
+  }
+}
+
+// The menu panel: sections, pages outside the game, the language.
+.menu-list {
+  display: grid;
+}
+
+.menu-link {
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  border-bottom: 1px solid var(--tarmac-rule);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-lg);
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  text-transform: uppercase;
+
+  &[aria-current='page'] {
+    text-decoration: underline;
+    text-decoration-thickness: 3px;
+    text-underline-offset: 6px;
+  }
+}
+
+.menu-language {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  color: var(--on-tarmac-2);
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 var(--sp-4);
+    border: 2px solid var(--on-tarmac);
+    border-radius: var(--r-control);
+    color: var(--on-tarmac);
+    font-weight: 700;
+    text-decoration: none;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .menu-link:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 3px;
+    text-underline-offset: 6px;
+  }
+
+  .menu-language a:hover {
+    background: var(--tarmac-hover);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .menu-language a {
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+}

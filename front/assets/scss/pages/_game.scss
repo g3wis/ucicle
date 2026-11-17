@@ -1,0 +1,162 @@
+// The game page: the mystery bib, the board, the end of the stage.
+
+.game {
+  flex: 1;
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--sp-4) var(--gutter-right) var(--sp-6) var(--gutter-left);
+}
+
+.game-wait {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--sp-4);
+  min-height: 50vh;
+  color: var(--on-tarmac-2);
+}
+
+.game-grid {
+  display: grid;
+  gap: var(--sp-5);
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.game-board {
+  min-width: 0;
+}
+
+.first-help {
+  margin: var(--sp-3) 0 0;
+  color: var(--on-tarmac-2);
+  font-size: var(--fs-sm);
+}
+
+.board {
+  display: grid;
+  gap: 10px;
+}
+
+// An empty place on the board, waiting for its bib.
+.bib-slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  border: 2px dashed var(--tarmac-line);
+  border-radius: var(--r-bib);
+
+  .bib-number {
+    width: var(--bib-column);
+    color: var(--on-tarmac-2);
+    font-size: 1.75rem;
+    text-align: center;
+  }
+
+  // The fifth slot is announced as the red bib it will become (D21): the outline of its state,
+  // and the numeral column filled red for the slot's full height, the 5 printed in Tyvek (5.5:1),
+  // like the pinned bib 5. The column hugs the outline's inner curve (the radius less the 2 px
+  // border) on the left corners.
+  &.bib-red .bib-number {
+    align-self: stretch;
+    display: grid;
+    place-items: center;
+    border-radius: calc(var(--r-bib) - 2px) 0 0 calc(var(--r-bib) - 2px);
+    background: var(--red);
+    color: var(--tyvek);
+  }
+}
+
+// The slot being played: the bib outline holds the rider field. The body carries the padding, so
+// the numeral column runs the slot's full height (red on the fifth).
+.bib-slot.is-active {
+  display: grid;
+  grid-template-columns: var(--bib-column) minmax(0, 1fr);
+  align-items: stretch;
+  border-style: solid;
+  border-color: var(--on-tarmac);
+  // After a try on a phone the page brings the slot into reach (GamePage): its lower edge stops
+  // short of the screen's, so the outline reads whole and the next slot shows below it.
+  scroll-margin-bottom: var(--sp-4);
+
+  // The numeral sits on the label's line, like a guess bib's numeral beside the name.
+  .bib-number {
+    padding-top: var(--sp-3);
+    color: var(--on-tarmac);
+    font-size: var(--fs-bib-number);
+  }
+
+  &.bib-red .bib-number {
+    place-items: start center;
+    color: var(--tyvek);
+  }
+}
+
+.slot-body {
+  min-width: 0;
+}
+
+// The label and the field start on the guess bibs' left edge (their name and values sit 8 px
+// after the numeral column; the slot's 2 px border counts).
+.bib-slot.is-active .slot-body {
+  padding: var(--sp-3) var(--sp-3) var(--sp-3) 6px;
+}
+
+// The end of the stage, under the turned bib (its numeral column carries the score): Partager at
+// the bib's full width, then the countdown on one line.
+.result {
+  display: grid;
+  justify-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-5);
+  text-align: center;
+}
+
+// The verdict sentence, visually hidden (.sr-only). Focused by script when the stage ends
+// (tabIndex -1, not a control): screen readers read it, and the next Tab lands on Partager, which
+// has its own ring.
+.result-title:focus,
+.result-title:focus-visible {
+  outline: none;
+}
+
+.share {
+  width: 100%;
+}
+
+.next-start {
+  margin-top: var(--sp-2);
+  color: var(--on-tarmac-2);
+  font-size: var(--fs-sm);
+}
+
+// The clock is a display number (components/Countdown: Archivo band, plain zeros, tabular).
+.next-start-clock {
+  color: var(--on-tarmac);
+}
+
+@media (min-width: 1024px) {
+  .game {
+    padding-top: var(--sp-6);
+  }
+
+  // A little air above the pair (D15, 4 to 6 vh), so a laptop screen reads as a composed bib and
+  // board rather than a form pushed under the header.
+  .game-grid {
+    grid-template-columns: minmax(0, 400px) minmax(0, 560px);
+    justify-content: center;
+    align-items: start;
+    gap: var(--sp-7);
+    max-width: none;
+    margin-top: var(--game-air);
+  }
+
+  .game-mystery {
+    position: sticky;
+    // Its resting position (the header, its 1px rule, .game padding-top, the grid's air): it never
+    // slides before it sticks.
+    top: calc(var(--header-h) + 1px + var(--sp-6) + var(--game-air));
+  }
+}

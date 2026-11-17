@@ -1,0 +1,151 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  text-size-adjust: 100%;
+  background: var(--tarmac);
+  // Every scrollIntoView, anchor jump and focus scroll stops below the sticky header.
+  scroll-padding-top: calc(var(--header-h) + var(--sp-2));
+}
+
+// Below 1024 px, while the facts band shows under the header (components/FactsBand), every scroll
+// also stops below the band: it never covers the field it was scrolled to.
+@media (max-width: 1023px) {
+  html.has-facts-band {
+    scroll-padding-top: calc(var(--header-h) + 1px + var(--facts-band-height) + var(--sp-2));
+  }
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--tarmac);
+  color: var(--on-tarmac);
+  font-family: var(--font-text);
+  font-size: var(--fs-base);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+figure {
+  margin: 0;
+}
+
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+[hidden] {
+  display: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  z-index: 100;
+  left: var(--gutter-left);
+  top: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--tyvek);
+  color: var(--ink);
+  font-weight: 700;
+  border-radius: var(--r-control);
+  transform: translateY(-200%);
+
+  &:focus {
+    transform: none;
+  }
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.text-link {
+  min-height: 44px;
+  padding: var(--sp-2);
+  border: 0;
+  background: none;
+  color: var(--on-tarmac);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+@media (forced-colors: active) {
+  // Windows contrast themes repaint backgrounds and drop box-shadows: keep real borders.
+  .bib {
+    border: 2px solid CanvasText;
+  }
+
+  .guess-bib.bib-red {
+    border-top-width: 6px;
+  }
+
+  // The Tyvek field and its list lose their fill: their 2 px boundary comes back.
+  .rider-input input,
+  .rider-options {
+    border: 2px solid CanvasText;
+  }
+
+  .rider-option[aria-selected='true'] {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .rider-option[aria-selected='true'] .rider-option-meta {
+    color: HighlightText;
+  }
+}

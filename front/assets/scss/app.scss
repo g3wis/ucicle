@@ -1,14 +1,21 @@
-@use 'variables' as *;
-
-@use 'layouts/index' as *;
-@use 'components/index' as *;
-@use 'features/index' as *;
-
-@use '@fontsource/roboto/latin-100.css' as *;
-@use '@fontsource/roboto/latin-400.css' as *;
-@use '@fontsource/roboto/latin-700.css' as *;
-@use 'root' as *;
-@use 'mixins' as *;
-@use 'typography' as *;
-@use 'icons' as *;
-@use 'material-override' as *;
+// Entry stylesheet, linked by every HTML page. Order: fonts, tokens, base, components, pages, panels.
+@use '@fontsource-variable/archivo/wdth.css';
+@use '@fontsource-variable/atkinson-hyperlegible-next/index.css';
+@use 'tokens';
+@use 'base';
+@use 'components/buttons';
+@use 'components/header';
+@use 'components/footer';
+@use 'components/bib';
+@use 'components/cells';
+@use 'components/mystery';
+@use 'components/known';
+@use 'components/facts-band';
+@use 'components/score';
+@use 'components/countdown';
+@use 'components/combobox';
+@use 'components/panel';
+@use 'pages/game';
+@use 'pages/about';
+@use 'panels/help';
+@use 'panels/stats';

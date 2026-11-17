@@ -48,3 +48,9 @@ yarn-error.log*
 !.yarn/versions
 .pnp.*
 
+
+# bunshin run state
+/.bunshin
+
+# Local copies of /api/*.json for offline builds and captures (never deployed)
+/dev-fixtures
