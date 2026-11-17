@@ -3,12 +3,13 @@ import { Comparison } from './compare';
 // The arrows are bare triangles (no tile on any platform), so the blue square stays the only blue
 // tile and a found row is the only all-blue row (D22).
 const ROW_EMOJI = {
-  up: '🔺', down: '🔻', eq: '🟦', no: '⬛',
+  up: '🔺', down: '🔻', eq: '🟦', no: '⬛', unknown: '⬜',
 } as const;
 
 /**
  * One row per try, in the order of the board: age, height, weight, country, team.
- * 🔺 the mystery value is higher, 🔻 lower; a blue square is equal or same; black is different.
+ * 🔺 the mystery value is higher, 🔻 lower; a blue square is equal or same; black is different;
+ * white is a value the data does not have (a height or a weight).
  * Never the rider's name: the answer stays out of everything shared.
  */
 export function shareGrid(comparisons: Comparison[]): string {

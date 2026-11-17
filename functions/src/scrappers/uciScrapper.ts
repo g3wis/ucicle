@@ -14,6 +14,19 @@ const WORLD_RANKING_ID = 1;
 const WORLD_RANKING_GROUP_ID = 1;
 const INDIVIDUAL_RANKING_TYPE_ID = 1;
 const REQUEST_TIMEOUT_MS = 60000;
+// DataRide fails on larger pages; a whole season ranking holds about 3,500 riders
+const RANKING_PAGE_SIZE = 1000;
+const MAX_RANKING_PAGES = 10;
+
+/**
+ * A road season of the UCI, from mid-October to mid-October (the 2027 season starts in October 2026).
+ * @param id DataRide id of the season
+ * @param year Year of the season
+ */
+export type UciSeason = {
+    id: number,
+    year: number,
+}
 
 /**
  * A rider of the UCI World Ranking.
@@ -59,7 +72,7 @@ export type UciResult = {
     invalid: boolean,
 }
 
-type DataRideSeason = { Id: number, Year: number, StartDate: string, EndDate: string };
+type DataRideSeason = { Id: number, Year: number, StartDate: string };
 type DataRideRanking = {
     ObjectId: number, Rank: number, DisplayName: string, TeamName: string | null, NationFullName: string | null,
     BirthDate: string, MomentId: number,
@@ -93,9 +106,10 @@ async function post<T>(endpoint: string, body: Record<string, string | number>):
 }
 
 /**
- * @return The road seasons that have started, most recent first
+ * @param now Reference date
+ * @return The road seasons that have started at the reference date, most recent first
  */
-async function getStartedSeasons(now: Date): Promise<DataRideSeason[]> {
+export async function getStartedSeasons(now: Date = new Date()): Promise<UciSeason[]> {
     const response = await withRetry(() => axios.get<DataRideSeason[]>(`${DATARIDE_URL}/GetDisciplineSeasons/`, {
         params: { disciplineId: ROAD_DISCIPLINE_ID },
         headers: { 'User-Agent': USER_AGENT },
@@ -105,10 +119,11 @@ async function getStartedSeasons(now: Date): Promise<DataRideSeason[]> {
 
     return response.data
         .filter(season => parseDataRideDate(season.StartDate) <= now)
-        .sort((a, b) => b.Year - a.Year);
+        .sort((a, b) => b.Year - a.Year)
+        .map(season => ({ id: season.Id, year: season.Year }));
 }
 
-async function getWorldRankingOfSeason(seasonId: number, size: number): Promise<UciRankedRider[]> {
+async function getWorldRankingPage(seasonId: number, page: number, pageSize: number): Promise<DataRidePage<DataRideRanking>> {
     const filters: [string, string | number][] = [
         ['RaceTypeId', ALL_RACE_TYPES_ID],
         ['CategoryId', MEN_ELITE_CATEGORY_ID],
@@ -118,50 +133,64 @@ async function getWorldRankingOfSeason(seasonId: number, size: number): Promise<
         ['IndividualName', ''],
         ['TeamName', ''],
     ];
+    // DataRide pages with `page` and `pageSize`, and ignores `skip`
     const body: Record<string, string | number> = {
         rankingId: WORLD_RANKING_ID,
         disciplineId: ROAD_DISCIPLINE_ID,
         rankingTypeId: INDIVIDUAL_RANKING_TYPE_ID,
-        take: size,
-        skip: 0,
-        page: 1,
-        pageSize: size,
+        take: pageSize,
+        skip: (page - 1) * pageSize,
+        page,
+        pageSize,
     };
     filters.forEach(([field, value], index) => {
         body[`filter[filters][${index}][field]`] = field;
         body[`filter[filters][${index}][value]`] = value;
     });
 
-    const page: DataRidePage<DataRideRanking> = await post('ObjectRankings', body);
-
-    return page.data.map(row => ({
-        uciId: row.ObjectId,
-        rank: row.Rank,
-        displayName: row.DisplayName,
-        team: row.TeamName?.trim().replace(/\s+/g, ' ') || null,
-        nation: row.NationFullName?.trim().replace(/^\*+$/, '') || null,
-        birthDate: parseDataRideDate(row.BirthDate),
-        momentId: row.MomentId,
-        seasonId,
-    }));
+    return post('ObjectRankings', body);
 }
 
 /**
- * @param size Number of riders to return
- * @param now Reference date used to pick the current season
- * @return The top `size` riders of the latest UCI World Ranking (men elite, road)
+ * @param season A road season
+ * @param limit Number of riders to return, every ranked rider when omitted
+ * @return The riders of the season's latest UCI World Ranking (men elite, road), best first
  */
-export async function getWorldRanking(size: number, now: Date = new Date()): Promise<UciRankedRider[]> {
+export async function getWorldRankingOfSeason(season: UciSeason, limit: number = Infinity): Promise<UciRankedRider[]> {
+    const pageSize: number = Math.min(RANKING_PAGE_SIZE, limit);
+    const riders: UciRankedRider[] = [];
+    for (let page = 1; page <= MAX_RANKING_PAGES && riders.length < limit; page++) {
+        const result: DataRidePage<DataRideRanking> = await getWorldRankingPage(season.id, page, pageSize);
+        riders.push(...result.data.map(row => ({
+            uciId: row.ObjectId,
+            rank: row.Rank,
+            displayName: row.DisplayName,
+            team: row.TeamName?.trim().replace(/\s+/g, ' ') || null,
+            nation: row.NationFullName?.trim().replace(/^\*+$/, '') || null,
+            birthDate: parseDataRideDate(row.BirthDate),
+            momentId: row.MomentId,
+            seasonId: season.id,
+        })));
+        if (result.data.length < pageSize || riders.length >= result.total) break;
+    }
+    return riders.slice(0, limit);
+}
+
+/**
+ * @param seasons The started seasons, most recent first
+ * @return The latest UCI World Ranking (men elite, road), every ranked rider, and its season
+ */
+export async function getCurrentWorldRanking(seasons: UciSeason[]): Promise<{ season: UciSeason, riders: UciRankedRider[] }> {
     // A new season opens in October with an empty ranking for a few days: fall back to the previous one
-    for (const season of (await getStartedSeasons(now)).slice(0, 2)) {
-        const ranking: UciRankedRider[] = await getWorldRankingOfSeason(season.Id, size);
-        if (ranking.length > 0) return ranking;
+    for (const season of seasons.slice(0, 2)) {
+        const riders: UciRankedRider[] = await getWorldRankingOfSeason(season);
+        if (riders.length > 0) return { season, riders };
     }
     throw new Error('No UCI World Ranking found for the current or the previous season');
 }
 
 /**
- * @param rider A rider returned by getWorldRanking
+ * @param rider A rider of the current UCI World Ranking (see getCurrentWorldRanking)
  * @return The results that earned the rider points in the ranking window (the last 52 weeks)
  */
 export async function getRiderResults(rider: UciRankedRider): Promise<UciResult[]> {

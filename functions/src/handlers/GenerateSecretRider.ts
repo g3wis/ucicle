@@ -2,9 +2,10 @@ import axios, { AxiosResponse } from 'axios';
 import dayjs from 'dayjs';
 
 import { uploadObject } from '../s3/S3Service.js';
-import { Rider } from '../types/CyclingTypes.js';
+import { Rider, SecretRider } from '../types/CyclingTypes.js';
 import { GameSession } from '../types/GameType.js';
 import { HandlerResponse } from '../types/ResponseTypes.js';
+import { isSecretRiderCandidate } from '../utils/riderUtils.js';
 import { getMaxMemoryConsumed, memoryStats } from '../utils/statUtils.js';
 
 export { handleGenerateSecretRider };
@@ -20,9 +21,10 @@ async function handleGenerateSecretRider(): Promise<HandlerResponse> {
         const date: string = dayjs().format('YYYYMMDD');
         const ridersResponse: AxiosResponse<Rider[]> = await axios.get(`http://${process.env.BUCKET_NAME}.${process.env.DOMAIN}/api/riders.json`);
 
-        const top100: Rider[] = ridersResponse.data.filter((rider: Rider) => rider.rank <= 100);
-        const randomIndex: number = Math.floor(Math.random() * top100.length);
-        const randomRider: Rider = top100[randomIndex];
+        // Current top 100 riders with a height, a weight and a best result (the starting hint)
+        const candidates: SecretRider[] = ridersResponse.data.filter(isSecretRiderCandidate);
+        if (candidates.length === 0) throw new Error('No secret rider candidate in riders.json');
+        const randomRider: SecretRider = candidates[Math.floor(Math.random() * candidates.length)];
 
         const gameSession: GameSession = {
             rider: randomRider,

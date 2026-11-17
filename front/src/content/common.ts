@@ -93,10 +93,27 @@ const fr: CommonContent = {
       age: 'Âge', height: 'Taille', weight: 'Poids', country: 'Pays', team: 'Équipe',
     },
     trends: {
-      age: { eq: 'même âge', up: 'le mystère est plus âgé', down: 'le mystère est plus jeune' },
-      height: { eq: 'même taille', up: 'le mystère est plus grand', down: 'le mystère est plus petit' },
-      weight: { eq: 'même poids', up: 'le mystère est plus lourd', down: 'le mystère est plus léger' },
+      age: {
+        eq: 'même âge',
+        up: 'le mystère est plus âgé',
+        down: 'le mystère est plus jeune',
+        unknown: 'âge inconnu',
+      },
+      height: {
+        eq: 'même taille',
+        up: 'le mystère est plus grand',
+        down: 'le mystère est plus petit',
+        unknown: 'taille inconnue',
+      },
+      weight: {
+        eq: 'même poids',
+        up: 'le mystère est plus lourd',
+        down: 'le mystère est plus léger',
+        unknown: 'poids inconnu',
+      },
     },
+    unknownValue: '?',
+    noTeam: 'Sans équipe UCI',
     same: {
       country: { eq: 'même pays', no: 'autre pays' },
       team: { eq: 'même équipe', no: 'autre équipe' },
@@ -183,10 +200,27 @@ const en: CommonContent = {
       age: 'Age', height: 'Height', weight: 'Weight', country: 'Country', team: 'Team',
     },
     trends: {
-      age: { eq: 'same age', up: 'the mystery rider is older', down: 'the mystery rider is younger' },
-      height: { eq: 'same height', up: 'the mystery rider is taller', down: 'the mystery rider is shorter' },
-      weight: { eq: 'same weight', up: 'the mystery rider is heavier', down: 'the mystery rider is lighter' },
+      age: {
+        eq: 'same age',
+        up: 'the mystery rider is older',
+        down: 'the mystery rider is younger',
+        unknown: 'age unknown',
+      },
+      height: {
+        eq: 'same height',
+        up: 'the mystery rider is taller',
+        down: 'the mystery rider is shorter',
+        unknown: 'height unknown',
+      },
+      weight: {
+        eq: 'same weight',
+        up: 'the mystery rider is heavier',
+        down: 'the mystery rider is lighter',
+        unknown: 'weight unknown',
+      },
     },
+    unknownValue: '?',
+    noTeam: 'No UCI team',
     same: {
       country: { eq: 'same country', no: 'other country' },
       team: { eq: 'same team', no: 'other team' },

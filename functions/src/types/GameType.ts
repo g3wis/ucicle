@@ -1,6 +1,6 @@
-import { Rider } from './CyclingTypes.js';
+import { SecretRider } from './CyclingTypes.js';
 
 export type GameSession = {
   date: string, // YYYYMMDD
-  rider: Rider,
+  rider: SecretRider,
 };

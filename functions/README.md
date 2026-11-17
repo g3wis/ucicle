@@ -6,7 +6,12 @@
 
 ## handleLoadRiders
 
-The aim of this function is to retrieve the list of the top 1000 UCI (Union Cycliste Internationale) riders once a month. This list will be saved in an s3 service. Only riders with complete data (team, country, height, weight, best result) are saved, and nothing is uploaded when fewer than 300 riders (or 50 of the top 100) are complete.
+The aim of this function is to build, once a month, the list of riders the player can guess, and save it in an s3 service:
+
+* the top 1000 of the current UCI (Union Cycliste Internationale) World Ranking,
+* the former top riders: every rider ranked in the top 100 of a UCI World Ranking since 2016 (`FORMER_RIDERS_SINCE`, `FORMER_RIDERS_TOP`), retired ones included (Froome, Nibali, Valverde…). A rider still ranked keeps their current rank and team; a rider out of the ranking gets `rank: null` and the team of the last ranking they appear in.
+
+Riders without country (neutral athletes) are left out. A rider without team this season takes the team of the last past ranking that has one, else `team: null` (a rider of a club or a national team: the front prints "Sans équipe UCI"). Height and weight are `null` when no source has them: the front prints "?" and does not compare. The best result is only computed for the secret rider candidates, the current top 100 with a team, a height and a weight (`isSecretRiderCandidate` in [riderUtils.ts](src/utils/riderUtils.ts)): it is the starting hint, shown for no one else. Nothing is uploaded when fewer than 300 riders, or 50 secret rider candidates, are found.
 
 ### Data sources
 
@@ -14,14 +19,14 @@ procyclingstats.com, the previous source, now answers every automated client wit
 
 | Field                              | Source                                                                                                                                  |
 |------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
-| rank, name, country, age, team     | [UCI World Ranking](https://dataride.uci.ch/iframe/rankings/10) (men elite, road), served as JSON by UCI DataRide: one request for the top 1000 |
+| rank, name, country, age, team     | [UCI World Ranking](https://dataride.uci.ch/iframe/rankings/10) (men elite, road), served as JSON by UCI DataRide in pages of 1000: the whole current ranking, and the whole ranking of every season since 2016 (for the former riders and their last team) |
 | name (display spelling)            | English label on [Wikidata](https://www.wikidata.org), matched by "UCI rider ID" (P11020), else by date of birth and name                |
 | height, weight                     | Wikidata (P2048, P2067), else the infobox of the English Wikipedia article                                                               |
-| bestResult                         | The rider's UCI results of the last 52 weeks (DataRide): the result worth the most UCI points, and how many times the rider got it      |
+| bestResult                         | The rider's UCI results of the last 52 weeks (DataRide): the result worth the most UCI points, and how many times the rider got it. Secret rider candidates only |
 
 Teams are the official UCI names (uppercase). The best result covers the ranking window (last 52 weeks), not the whole career.
 
-DataRide answers each rider's results in 2 to 6 seconds, so a run takes about 15 minutes (4 requests in flight): the Scaleway function timeout must allow it.
+DataRide answers each rider's results in 2 to 6 seconds, which is why the best result is only computed for the secret rider candidates (about 90 riders, 4 requests in flight). With the season rankings (about 45 pages of 1000 riders) and Wikidata, a run took 1.5 to 4 minutes in November 2026.
 
 ### Local run
 

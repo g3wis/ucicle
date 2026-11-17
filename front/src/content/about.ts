@@ -40,8 +40,9 @@ export type AboutContent = {
 };
 
 // Sources of the Data section: functions/README.md and functions/src (riderLoader.ts,
-// bestResult.ts, GenerateSecretRider.ts), commit 5cd4cbd. The top 1,000 is riderLoader.ts
-// RANKING_SIZE: change the 'Coureurs' / 'Riders' fact if that constant moves.
+// bestResult.ts, GenerateSecretRider.ts, riderUtils.ts). The top 1,000 is riderLoader.ts
+// RANKING_SIZE, the former riders FORMER_RIDERS_TOP (100) and FORMER_RIDERS_SINCE (2016): change the
+// 'Coureurs' / 'Riders' fact if those constants move.
 // Round numbers in running prose are spelled out (decisions/round-4.md, D25): "les mille
 // premiers", "les cent premiers"; "the top thousand", "the top hundred". Clock times (5 h UTC,
 // 05:00 UTC), the 52 weeks of the ranking and the scores the board prints (3/5, X/5, 2×) stay
@@ -71,15 +72,22 @@ const fr: AboutContent = {
         term: 'Classement et résultats',
         text: 'UCI DataRide, le service de données de l’Union cycliste internationale.',
       },
-      { term: 'Taille et poids', text: 'Wikidata, à défaut Wikipédia en anglais.' },
+      {
+        term: 'Taille et poids',
+        text: 'Wikidata, à défaut Wikipédia en anglais. Si ni l’un ni l’autre ne les donne, le dossard affiche '
+          + '« ? » et ne compare pas.',
+      },
       {
         term: 'Coureurs',
-        text: 'Les mille premiers du classement mondial UCI sur route, hommes élite, dont on connaît '
-          + 'l’équipe, le pays, la taille, le poids et au moins un résultat. Tu peux proposer n’importe lequel.',
+        text: 'Les mille premiers du classement mondial UCI sur route, hommes élite, et les cent premiers '
+          + 'de chaque classement depuis 2016, retraités compris. Un coureur sorti du classement garde sa '
+          + 'dernière équipe UCI ; un coureur de club ou d’équipe nationale est « sans équipe UCI ». '
+          + 'Tu peux proposer n’importe lequel.',
       },
       {
         term: 'Coureur mystère',
-        text: 'Tiré au sort chaque jour à 5 h UTC parmi les cent premiers du classement. '
+        text: 'Tiré au sort chaque jour à 5 h UTC parmi les cent premiers du classement actuel '
+          + 'dont on connaît l’équipe, la taille, le poids et au moins un résultat. '
           + 'À Paris, c’est 6 h en hiver et 7 h en été.',
       },
       { term: 'Mise à jour', text: 'La liste des coureurs est refaite une fois par mois.' },
@@ -138,15 +146,21 @@ const en: AboutContent = {
         term: 'Ranking and results',
         text: 'UCI DataRide, the data service of the Union Cycliste Internationale.',
       },
-      { term: 'Height and weight', text: 'Wikidata, or failing that English Wikipedia.' },
+      {
+        term: 'Height and weight',
+        text: 'Wikidata, or failing that English Wikipedia. When neither has them, the bib shows “?” and '
+          + 'does not compare.',
+      },
       {
         term: 'Riders',
-        text: 'The top thousand of the UCI men’s elite road world ranking whose team, country, height, weight '
-          + 'and at least one result are known. You can guess any of them.',
+        text: 'The top thousand of the UCI men’s elite road world ranking, and the top hundred of every ranking '
+          + 'since 2016, retired riders included. A rider who left the ranking keeps their last UCI team; '
+          + 'a rider of a club or a national team has “no UCI team”. You can guess any of them.',
       },
       {
         term: 'Mystery rider',
-        text: 'Drawn at random every day at 05:00 UTC from the top hundred of the ranking.',
+        text: 'Drawn at random every day at 05:00 UTC from the top hundred of the current ranking '
+          + 'whose team, height, weight and at least one result are known.',
       },
       { term: 'Updates', text: 'The list of riders is rebuilt once a month.' },
     ],
