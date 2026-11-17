@@ -1,0 +1,94 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: 48px;
+  padding: 0 var(--sp-5);
+  border: 2px solid transparent;
+  border-radius: var(--r-control);
+  font-weight: 800;
+  font-size: var(--fs-base);
+  white-space: nowrap;
+  cursor: pointer;
+
+  .icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+    box-shadow: none;
+  }
+}
+
+.button-primary {
+  background: var(--tyvek);
+  border-color: var(--tyvek);
+  color: var(--ink);
+  --focus: var(--focus-on-tarmac);
+
+  // Not able to act yet, but a button from the start (D16): no fill, the dashed slot's grey as a
+  // solid 2 px outline (3.3:1 on tarmac), the label in secondary text, still a real disabled
+  // button. Once it can act it fills with Tyvek: one object changes state. The first filled
+  // control of a page is the one that can act.
+  &:disabled {
+    background: transparent;
+    border-color: var(--tarmac-line);
+    color: var(--on-tarmac-2);
+    cursor: not-allowed;
+  }
+}
+
+.button-secondary {
+  background: transparent;
+  border-color: var(--on-tarmac);
+  color: var(--on-tarmac);
+}
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--on-tarmac);
+  cursor: pointer;
+
+  &[aria-expanded='true'] {
+    background: var(--tarmac-raised);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  // The bib's own edge grammar: a hard 2 px edge, no blur. Not while pressed: the press wins.
+  .button-primary:hover:not(:disabled):not(:active) {
+    box-shadow: 0 2px 0 rgb(0 0 0 / 45%);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .button-primary:hover:not(:disabled):not(:active) {
+      transform: translateY(-1px);
+    }
+  }
+
+  .button-secondary:hover,
+  .icon-button:hover {
+    background: var(--tarmac-hover);
+  }
+
+  .text-link:hover {
+    text-decoration-thickness: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .button,
+  .icon-button {
+    transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+  }
+}

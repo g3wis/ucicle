@@ -1,5 +1,6 @@
 const mime = require('mime');
 const fs = require('fs');
+const zlib = require('zlib');
 const { PutObjectCommand, S3Client } = require('@aws-sdk/client-s3');
 
 const BUILD_PATH = './build';
@@ -28,9 +29,15 @@ const cacheControl = (key) => {
   return 'public, max-age=3600';
 };
 
+// The bucket serves files as stored: text is stored gzipped and served with
+// Content-Encoding: gzip. Fonts (woff2) and images are already compressed.
+const COMPRESSIBLE = /\.(js|css|html|svg|json|txt|xml)$/;
+
 const upload = async (filename) => {
-  const content = fs.readFileSync(filename);
+  const raw = fs.readFileSync(filename);
   const key = filename.replace(`${BUILD_PATH}/`, '');
+  const gzip = COMPRESSIBLE.test(key);
+  const content = gzip ? zlib.gzipSync(raw, { level: 9 }) : raw;
 
   await client.send(new PutObjectCommand({
     Bucket: process.env.BUCKET_NAME,
@@ -41,6 +48,7 @@ const upload = async (filename) => {
     ContentType: mime.getType(filename) || 'application/octet-stream',
     CacheControl: cacheControl(key),
     ContentLength: content.length,
+    ...(gzip ? { ContentEncoding: 'gzip' } : {}),
   }));
   console.log(`Uploaded ${key}`);
 };

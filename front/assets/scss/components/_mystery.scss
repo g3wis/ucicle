@@ -1,0 +1,265 @@
+// The mystery bib: hint printed on it, facts written onto it (_known.scss), turned over at the end.
+
+.mystery {
+  perspective: 1400px;
+}
+
+// During the one flip both faces share one grid cell. Each keeps its natural height (start, not
+// stretch): the back never stretches to the front's height, so nothing jumps at the swap.
+.mystery-card {
+  display: grid;
+  align-items: start;
+  transform-style: preserve-3d;
+}
+
+.mystery-still {
+  display: grid;
+}
+
+.mystery-face {
+  grid-area: 1 / 1;
+  padding-bottom: var(--sp-5);
+  backface-visibility: hidden;
+}
+
+// The front grows to fit what it shows: once the team is proved, its blue foot band closes it.
+.mystery-front[data-team] {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+
+  .mystery-facts {
+    padding-bottom: var(--sp-4);
+  }
+
+  .bib-foot {
+    justify-content: center;
+    margin-top: auto;
+    padding-left: 44px;
+    padding-right: 44px;
+  }
+
+  // On the blue band, the bottom pins turn light so they stay visible.
+  :is(.pin-wrap-bl, .pin-wrap-br) {
+    --pin: var(--tyvek-shade);
+    --pin-dark: var(--tyvek);
+  }
+}
+
+// The turned bib, in the guess bibs' grammar: the band, then the numeral column (the score) with
+// the rider and the palmarès to its right, then the team on the foot band.
+.mystery-back {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+  transform: rotateY(180deg);
+
+  .bib-foot {
+    margin-top: auto;
+    padding-right: 44px;
+  }
+}
+
+.mystery-still .mystery-back {
+  transform: none;
+}
+
+.mystery-back-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.mystery-back-main {
+  min-width: 0;
+  padding: var(--sp-5) var(--sp-4) var(--sp-5);
+  text-align: center;
+
+  .cells {
+    margin-bottom: var(--sp-3);
+  }
+}
+
+// With a score: the column on the left, everything else set from its edge, like a guess bib.
+.mystery-back[data-result] {
+  .mystery-back-body {
+    grid-template-columns: var(--mystery-column) minmax(0, 1fr);
+  }
+
+  .mystery-back-main {
+    padding-left: var(--sp-2);
+    text-align: left;
+  }
+
+  .mystery-name {
+    padding: 0 0 var(--sp-3);
+    text-align: left;
+  }
+
+  .mystery-hint {
+    padding: 0;
+    text-align: left;
+  }
+
+  .bib-foot {
+    padding-left: calc(var(--mystery-column) + var(--sp-2));
+  }
+}
+
+// Without one (a page that passes no outcome): the rider centred, as before the score moved here.
+.mystery-back:not([data-result]) .bib-foot {
+  justify-content: center;
+  padding-left: 44px;
+}
+
+// The score as the bib's number: the tries, "/5" at 40 % beside it, on one baseline.
+.mystery-score {
+  display: grid;
+  place-items: center;
+  align-self: stretch;
+  padding: var(--sp-3) 0;
+  font-size: var(--fs-score);
+  line-height: 0.85;
+  white-space: nowrap;
+}
+
+.mystery-score-max {
+  color: var(--ink-2);
+  font-size: 0.4em;
+}
+
+// A missed stage: the column filled red for the full height of the body, the X and "/5" in
+// Tyvek, like bib 5 (5.5:1). The foot band stays ink.
+.mystery-back[data-result='missed'] .mystery-score {
+  background: var(--red);
+  color: var(--tyvek);
+
+  .mystery-score-max {
+    color: var(--tyvek);
+  }
+}
+
+// A win is as loud as a loss, in the colour of "same" (D14): the column filled blue, the tries
+// and "/5" in white (5.8:1), and the foot band is the full blue band of a proved team
+// (components/_bib.scss, .bib-foot[data-state='eq']). The two differ at a glance: blue found, red
+// missed.
+.mystery-back[data-result='found'] {
+  .mystery-score {
+    background: var(--same);
+    color: var(--on-same);
+  }
+
+  .mystery-score-max {
+    color: var(--on-same);
+  }
+
+  // On the blue band, the bottom pins turn light so they stay visible.
+  :is(.pin-wrap-bl, .pin-wrap-br) {
+    --pin: var(--tyvek-shade);
+    --pin-dark: var(--tyvek);
+  }
+}
+
+.mystery .pin-wrap-tl,
+.mystery .pin-wrap-tr {
+  top: 12px;
+}
+
+// The "?" at bib-numeral scale (D19). Its line box is trimmed close to the glyph, so on a fresh
+// game at 390 x 664 the field and Valider still end inside the first screen.
+.mystery-number {
+  padding-top: var(--sp-1);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-numeral);
+  font-weight: 900;
+  font-size: var(--fs-mystery);
+  line-height: 0.88;
+  text-align: center;
+}
+
+.mystery-hint {
+  display: grid;
+  gap: 2px;
+  padding: var(--sp-2) var(--sp-5) 0;
+  text-align: center;
+}
+
+.hint-result {
+  color: var(--ink);
+  font-size: var(--fs-base);
+  font-weight: 700;
+
+  &::first-letter {
+    text-transform: uppercase;
+  }
+}
+
+.hint-recurrence {
+  margin-right: var(--sp-1);
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.hint-race {
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-lg);
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+// The years are display figures: band type, plain zeros, tabular.
+.hint-years {
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-md);
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.mystery-name {
+  padding: 0 0 var(--sp-4);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-numeral);
+  font-weight: 900;
+  font-size: var(--fs-xl);
+  line-height: 0.95;
+  text-align: center;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+// On a laptop the mystery bib is the hero (D15): the front is a portrait sheet as tall as a fresh
+// board (its five slots), the "?" large in its upper part, the hint and the ruled line in its
+// lower part, the team band closing it once proved. The turned face keeps its own height.
+@media (min-width: 1024px) {
+  .mystery-front {
+    display: flex;
+    flex-direction: column;
+    min-height: var(--mystery-hero-height);
+  }
+
+  .mystery-front .mystery-number {
+    display: grid;
+    flex: 1;
+    place-items: center;
+    padding: var(--sp-4) 0 var(--sp-2);
+    font-size: var(--fs-mystery-hero);
+  }
+}
+
+@media (forced-colors: active) {
+  // A found stage's column keeps a fill, like the same-team band: the system highlight.
+  .mystery-back[data-result='found'] .mystery-score {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+
+    .mystery-score-max {
+      color: HighlightText;
+    }
+  }
+}

@@ -1,0 +1,131 @@
+// Below 1024 px: the band fixed under the sticky header (components/FactsBand), shown only while
+// the mystery bib's facts are out of view. Two lines: the hint, then what the tries proved. A
+// copy on the road, never blue blocks; opacity only, instant when motion is reduced.
+
+.facts-band {
+  position: fixed;
+  z-index: 19; // under the header (20), over the page
+  // The header's height and its 1 px rule.
+  top: calc(var(--header-h) + 1px);
+  left: 0;
+  right: 0;
+  height: var(--facts-band-height);
+  border-bottom: 1px solid var(--tarmac-rule);
+  background: var(--tarmac-raised);
+  color: var(--on-tarmac);
+  opacity: 0;
+  pointer-events: none;
+
+  &[data-shown] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.facts-band-inner {
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  height: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 0 var(--gutter-right) 0 var(--gutter-left);
+}
+
+// The hint: the result phrase, then the race in the band voice. One line, an ellipsis if long.
+.facts-band-hint {
+  overflow: hidden;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  &::first-letter {
+    text-transform: uppercase;
+  }
+}
+
+.facts-band-recurrence {
+  margin-right: var(--sp-1);
+  font-weight: 800;
+}
+
+.facts-band-race {
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+// The facts, most decisive first. Those that do not fit wrap onto a second line that stays
+// hidden: the ranges drop first, a fact is shown whole or not at all.
+.facts-band-facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  align-items: center;
+  height: 1rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.facts-band-fact {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  // A fact longer than the whole line (a long team alone) keeps an ellipsis.
+  max-width: 100%;
+  height: 100%;
+  padding: 0 6px;
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  white-space: nowrap;
+
+  &:first-child {
+    padding-left: 0;
+  }
+
+  & + & {
+    border-left: 1px solid var(--tarmac-line);
+  }
+
+  &[data-kind='excluded'] {
+    color: var(--on-tarmac-2);
+  }
+}
+
+.facts-band-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.facts-band-icon {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2.6;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  // Out: ease-in. In: ease-out (a transition takes the timing of the state it goes to).
+  .facts-band {
+    transition: opacity var(--dur-fast) var(--ease-in);
+
+    &[data-shown] {
+      transition-timing-function: var(--ease-out);
+    }
+  }
+}
+
+// From 1024 px the mystery bib is sticky beside the board, always in view: no band.
+@media (min-width: 1024px) {
+  .facts-band {
+    display: none;
+  }
+}

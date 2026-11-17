@@ -1,0 +1,18 @@
+// What the tries proved, printed on the mystery bib's front as the guess bibs' ruled line
+// (components/_cells.scss): age, height, weight, country. Bounds in ink, the countries ruled out
+// in secondary ink, a value proved exact as a blue block with its check. The phone copy is the
+// band under the header (_facts-band.scss).
+
+.known {
+  margin: var(--sp-4) var(--sp-4) 0;
+}
+
+// A range ("1,77 à 1,79 m") or a list of countries may take a second line; past that, an
+// ellipsis. The unit never leaves its figure (narrow no-break space).
+.known-value {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  text-wrap: balance;
+}

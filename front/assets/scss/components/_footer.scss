@@ -1,0 +1,58 @@
+.site-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--tarmac-rule);
+}
+
+.site-footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1) var(--sp-5);
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--sp-3) var(--gutter-right) calc(var(--sp-3) + env(safe-area-inset-bottom, 0px)) var(--gutter-left);
+  color: var(--on-tarmac-2);
+  font-size: var(--fs-xs);
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0;
+    color: var(--on-tarmac);
+    text-underline-offset: 3px;
+  }
+
+  a[aria-current='page'] {
+    color: var(--on-tarmac-2);
+    text-decoration: none;
+  }
+}
+
+// Below 1024 px: the credit on its own line, then À propos and the language together.
+.footer-credit {
+  flex-basis: 100%;
+  padding-top: var(--sp-1);
+}
+
+// From 1024 px the header carries both links: the footer keeps only the credit.
+@media (min-width: 1024px) {
+  .site-footer-inner {
+    min-height: 68px;
+  }
+
+  .footer-credit {
+    flex-basis: auto;
+    padding-top: 0;
+  }
+
+  .footer-link {
+    display: none;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .site-footer-inner a:hover {
+    text-decoration-thickness: 2px;
+  }
+}

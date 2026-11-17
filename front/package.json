@@ -3,17 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@emotion/react": "^11.10.4",
-    "@emotion/styled": "^11.10.4",
-    "@fontsource/roboto": "^4.5.8",
-    "@mui/icons-material": "^5.10.9",
-    "@mui/material": "^5.10.9",
-    "@mui/styles": "^5.10.9",
-    "@mui/system": "^5.10.9",
-    "@mui/x-date-pickers": "^5.0.17",
+    "@fontsource-variable/archivo": "5.3.0",
+    "@fontsource-variable/atkinson-hyperlegible-next": "5.3.0",
     "axios": "^1.4.0",
     "dayjs": "^1.11.5",
     "mime": "^3.0.0",
+    "motion": "14.9.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "7.37.0",
@@ -64,13 +59,11 @@
     "vite": "^4.0.3"
   },
   "browserslist": [
-    "defaults",
-    "not IE 11",
-    "not op_mini all",
-    "Firefox >= 75",
-    "Chrome >= 80",
-    "Firefox >= 75",
-    "safari >= 12"
+    "chrome >= 87",
+    "edge >= 88",
+    "firefox >= 78",
+    "safari >= 14",
+    "ios_saf >= 14"
   ],
   "scripts": {
     "ci": "yarn && yarn eslint && yarn build",
@@ -78,7 +71,7 @@
     "start": "concurrently \"yarn watch-ts\" \"yarn watch-js\"",
     "watch-ts": "ttsc --incremental -w",
     "watch-js": "vite --host",
-    "build": "rm -rf build && ttsc && vite build",
+    "build": "rm -rf build && ttsc && vite build && node scripts/launch-guard.js",
     "stylelint": "stylelint 'assets/scss/**/*.scss'",
     "eslint": "eslint src --ext .ts,.tsx",
     "typescript": "tsc --noEmit",

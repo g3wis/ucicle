@@ -1,0 +1,80 @@
+// Owner: rules clone. Styles of the Help panel, its example bib and the lines that read it. The
+// About page no longer shows the example (D18): it opens this panel instead.
+
+.help {
+  display: grid;
+  gap: var(--sp-5);
+}
+
+.help-lead {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.help-section {
+  display: grid;
+  gap: var(--sp-2);
+
+  // The clock to the next start. The component sets its display figures (Archivo, plain zero,
+  // tabular, band weight); its colour and size belong to the help.
+  .next-start {
+    margin-top: 0;
+    color: var(--on-tarmac-2);
+    font-size: var(--fs-sm);
+  }
+
+  .next-start-clock {
+    color: var(--on-tarmac);
+    font-size: var(--fs-base);
+    font-weight: 800;
+  }
+}
+
+.help-heading {
+  color: var(--on-tarmac-2);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-sm);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.help-more .text-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+}
+
+// The way back to the board, on the game page: full width on a phone, its own width beyond.
+.help-play .button {
+  width: 100%;
+}
+
+@media (min-width: 480px) {
+  .help-play .button {
+    width: auto;
+  }
+}
+
+// The example bib: the shared GuessBib, already pinned, in a figure. Its caption, the
+// "made up" mark, is read first.
+.example-bib {
+  margin: var(--sp-1) 0;
+}
+
+.example-caption {
+  margin-bottom: var(--sp-2);
+  color: var(--on-tarmac-2);
+  font-size: var(--fs-sm);
+}
+
+.bib-lines {
+  display: grid;
+  gap: var(--sp-2);
+
+  strong {
+    font-weight: 800;
+  }
+}

@@ -69,6 +69,8 @@ module.exports = {
         message: '`with` is disallowed in strict mode because it makes code impossible to predict and optimize.',
       },
     ],
+    // Named exports keep content and helper modules greppable and tree-shakable.
+    'import/prefer-default-export': 'off',
     '@typescript-eslint/ban-ts-comment': 'error',
     '@typescript-eslint/no-explicit-any': 2,
     '@typescript-eslint/no-use-before-define': ['error', {

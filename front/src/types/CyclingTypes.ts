@@ -31,4 +31,4 @@ export type BestResult = {
   years: number[]
 };
 
-export type RaceType = 'GC' | 'Point GC' | 'KOM' | 'stage' | 'race';
+export type RaceType = 'GC' | 'Point GC' | 'Points GC' | 'KOM' | 'stage' | 'race';

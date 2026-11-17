@@ -1,0 +1,9 @@
+// The clock to the next start: display figures in Archivo, whose zero is plain, tabular so the
+// seconds never shift. Its colour and size belong to the page that shows it.
+.next-start-clock {
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}

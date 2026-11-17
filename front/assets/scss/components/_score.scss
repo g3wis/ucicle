@@ -1,0 +1,30 @@
+// The score of a stage, set as a bib numeral, on the tarmac: the stats history (components/Score).
+// On the game page the score is the turned mystery bib's number (_mystery.scss, D9).
+
+.score {
+  display: inline-grid;
+  justify-items: center;
+  gap: var(--sp-1);
+  text-transform: none;
+}
+
+.score-figure {
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-numeral);
+  font-weight: 900;
+  font-size: var(--fs-score);
+  line-height: 0.85;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+// Win and loss differ at a glance: only a missed stage's X is red.
+.score[data-result='missed'] .score-tries {
+  color: var(--red-on-tarmac);
+}
+
+.score-max {
+  color: var(--on-tarmac-2);
+  font-size: 0.4em;
+}

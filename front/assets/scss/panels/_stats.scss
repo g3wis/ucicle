@@ -1,0 +1,219 @@
+// Owner: stats clone. Styles of the Stats panel: the player's summary, the tries, the past stages.
+
+.stats {
+  display: grid;
+  gap: var(--sp-6);
+  padding-top: var(--sp-1);
+}
+
+.stats-section {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.stats-heading {
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-base);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.stats-note,
+.stats-storage {
+  color: var(--on-tarmac-2);
+  font-size: var(--fs-xs);
+}
+
+// The player's summary: a Tyvek card with the first stage kept on its top band. A summary is
+// not a bib: no pins, so the band needs no room for them.
+.stats-card {
+  padding-bottom: var(--sp-4);
+
+  .bib-band {
+    padding-inline: var(--sp-3);
+  }
+}
+
+.stats-figures {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-1);
+  margin: 0;
+  padding: var(--sp-4) var(--sp-2) 0;
+}
+
+// Label first for screen readers (dt, dd), number first for the eye. The figures are display
+// numbers: Archivo, tabular, its plain zero.
+.stats-figure {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+  text-align: center;
+}
+
+.stats-figure-value {
+  margin: 0;
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-numeral);
+  font-weight: 900;
+  font-size: var(--fs-bib-number);
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.stats-figure-unit {
+  font-size: var(--fs-lg);
+}
+
+.stats-figure-label {
+  color: var(--ink-2);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+// Wins by number of tries, then the losses, printed like a results sheet (D17): one thin rule per
+// row, no slab. No track behind the rules: the tarmac is the axis.
+.stats-dist {
+  // Room for a three-digit count after the longest rule.
+  --stats-end: 3rem;
+
+  display: grid;
+  gap: 6px;
+}
+
+.stats-dist-row {
+  display: grid;
+  grid-template-columns: var(--bib-column) minmax(0, 1fr);
+  align-items: center;
+  min-height: 32px;
+}
+
+.stats-dist-try {
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-numeral);
+  font-weight: 900;
+  font-size: var(--fs-lg);
+  line-height: 1;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+
+  // The score's grammar: only a missed stage's X is red, a win never is.
+  [data-missed] > & {
+    color: var(--red-on-tarmac);
+  }
+}
+
+.stats-dist-track {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+// A printed rule, square-ended. Today's is Tyvek at the same height: the rule says it, no tag.
+.stats-dist-bar {
+  display: block;
+  flex: none;
+  width: calc((100% - var(--stats-end)) * var(--share, 0));
+  height: 8px;
+  background: var(--on-tarmac-2);
+  transform-origin: left center;
+
+  [data-today] > .stats-dist-track > & {
+    background: var(--tyvek);
+  }
+}
+
+// The counts are display numbers: Archivo numerals, tabular, its plain zero.
+.stats-dist-count {
+  min-width: 2ch;
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-numeral);
+  font-weight: 900;
+  font-size: var(--fs-md);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+// The past stages, most recent first. Each score is the turned mystery bib's numeral
+// (components/Score) at the size of a bib number: "3/5", the "/5" at 40 %, the X of a missed
+// stage in red.
+.stats-games {
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.stats-game {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  align-items: center;
+  column-gap: var(--sp-3);
+  min-height: 52px;
+}
+
+.stats-game .score {
+  justify-self: start;
+  justify-items: start;
+}
+
+.stats-game .score-figure {
+  font-size: var(--fs-bib-number);
+}
+
+.stats-game-rider {
+  display: grid;
+  min-width: 0;
+}
+
+.stats-game-name {
+  overflow: hidden;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.stats-game-date {
+  color: var(--on-tarmac-2);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+
+  &::first-letter {
+    text-transform: uppercase;
+  }
+}
+
+// No stage finished yet: one sentence, the way to the game, the storage note.
+.stats-empty {
+  justify-items: start;
+  gap: var(--sp-4);
+}
+
+.stats-empty-text {
+  font-size: var(--fs-md);
+  font-weight: 700;
+}
+
+.stats-play {
+  text-decoration: none;
+}
+
+@media (forced-colors: active) {
+  // A contrast theme repaints backgrounds: the rules keep a system colour, today’s in Highlight.
+  .stats-dist-bar {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+
+  [data-today] > .stats-dist-track > .stats-dist-bar {
+    background: Highlight;
+  }
+}

@@ -11,13 +11,23 @@ Inspired by [Wordle](https://www.nytimes.com/games/wordle/index.html) and [Poelt
 - **Starting hint**: the mystery rider's best result, e.g. *"2 times 1st of the mountains classification of Tour de France in 2022 and 2023"*.
 - **After each guess**, every attribute is compared to the mystery rider:
 
-  | Attribute            | Feedback                                                       |
-  |----------------------|----------------------------------------------------------------|
-  | Age, height, weight  | `=` same · ↑ mystery rider's value is higher · ↓ it is lower   |
-  | Country, team        | 🟩 same · 🟥 different                                          |
+  | Attribute            | Feedback on the guess bib                                                        |
+  |----------------------|----------------------------------------------------------------------------------|
+  | Age, height, weight  | value with its unit; ↑ the mystery rider's is higher, ↓ lower; equal: blue cell with ✓ |
+  | Country              | same: blue cell with ✓; different: the code in grey                              |
+  | Team                 | on the bib's foot band; same: a blue ✓ tile before the name                      |
 
-- **End of game**: right name → win. 5th wrong guess → lose. The answer is revealed and a *Share* button copies the result (`🎉 (3/5) 🟥🟥🟩`) to the clipboard.
-- **No account**: today's game and the stats (games played, wins, win rate, history) live in the browser's `localStorage`.
+  What each try proves is also written on the mystery bib (bounds, country, team).
+
+- **End of game**: right name → win. 5th wrong guess → lose. The mystery bib turns over and shows the rider; its number becomes the score (`3/5` or `X/5`). *Partager* opens the phone's share sheet (clipboard elsewhere) with a result that never names the rider (🔺/🔻: the mystery rider's value is higher/lower, 🟦 same, ⬛ different):
+  ```
+  Ucicle #1, trouvé en 3/5 🚴
+  🔺🔺🔺⬛⬛
+  🔺🔺🔺🟦🟦
+  🟦🟦🟦🟦🟦
+  https://www.ucicle.fr
+  ```
+- **No account**: the game in progress (`game-progress`), the history and the stats (games played, win rate, streaks, distribution) live in the browser's `localStorage`, keyed on `secret_rider.json`'s date.
 
 ## Architecture
 
@@ -34,7 +44,7 @@ flowchart LR
 
 | Folder       | Stack                                        | Role                                                      |
 |--------------|----------------------------------------------|-----------------------------------------------------------|
-| `front/`     | React 18, TypeScript, Vite, MUI, SCSS        | Game UI, FR/EN. Reads `/api/*.json`, stores history locally. |
+| `front/`     | React 18, TypeScript, Vite, SCSS, motion     | Game UI, FR (`/`, `/a-propos/`) and EN (`/en/`, `/en/about/`). Reads `/api/*.json`, stores history locally. Design: [front/DESIGN.md](front/DESIGN.md). |
 | `functions/` | Node.js, TypeScript, axios, AWS S3 SDK       | Collects rider data and publishes the game files to the bucket. |
 
 ### Data jobs (`functions/`)
@@ -60,12 +70,16 @@ GameSession = { date: 'YYYYMMDD', rider }   // content of secret_rider.json
 
 ```
 .github/workflows/  ci.yml: lint + build on every push/PR · cd.yml: deploy on master
+front/                one static HTML per page and language (index.html, en/, a-propos/, en/about/)
 front/src/
-  App.tsx           game flow (fetch data, handle guesses, win/lose)
-  components/       hint card, rider select, guess table, result card, modals
-  services/         gameService: localStorage history + share
-  i18n/             fr.ts / en.ts
-  types/            Rider, GameSession…
+  app/              App shell, context (language, panels, live region), nav config (data sections declared, hidden)
+  pages/            game/GamePage.tsx (the board), about/AboutPage.tsx
+  panels/           help/, stats/ (opened from the header, #help / #stats)
+  components/       the bib system: MysteryBib, GuessBib, Cell, Pin, RiderCombobox, FactsBand, Panel…
+  game/             compare, knowledge, storage, stats, share, stage number, useGame
+  content/          every visible string, FR and EN (common.ts, help.ts, about.ts, stats.ts)
+  data/ i18n/ motion/ types/   API, countries, formatters, motion tokens, Rider, GameSession…
+front/assets/scss/    _tokens.scss (the design tokens), components/, pages/, panels/
 functions/src/
   index.ts          serverless handler (action router)
   main.ts           local run: LOAD_RIDERS then GENERATE_SECRET_RIDER
@@ -121,9 +135,9 @@ The function's crons and memory (4 GB min) are configured in Scaleway, not in th
 ## Conventions
 
 - CI (`yarn ci`: ESLint + build) must pass for both `front/` and `functions/`.
-- Every UI string goes in **both** `front/src/i18n/fr.ts` and `en.ts`.
+- Every UI string goes in `front/src/content/`, in **both** languages (see [front/AGENTS.md](front/AGENTS.md)).
 - Keep the `Rider` types in sync between `front/` and `functions/`.
-- SCSS structure: see [front/assets/scss/README.md](front/assets/scss/README.md).
+- Design rules, tokens and components: [front/DESIGN.md](front/DESIGN.md). Before launch, `yarn build` lists the facts the owner still has to supply (`front/scripts/launch-facts.json`).
 
 More details: [front/README.md](front/README.md) · [functions/README.md](functions/README.md)
 

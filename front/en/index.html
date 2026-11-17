@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" data-page="game">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#2b2e33" />
+    <title>Ucicle: guess today’s mystery pro cyclist in 5 tries</title>
+    <meta name="description" content="Guess today’s pro cyclist in 5 tries from their best result, then age, height, weight, country and team. A new rider every morning." />
+    <link rel="canonical" href="https://www.ucicle.fr/en/" />
+    <link rel="alternate" hreflang="fr" href="https://www.ucicle.fr/" />
+    <link rel="alternate" hreflang="en" href="https://www.ucicle.fr/en/" />
+    <link rel="alternate" hreflang="x-default" href="https://www.ucicle.fr/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Ucicle" />
+    <meta property="og:title" content="Ucicle, today’s mystery rider" />
+    <meta property="og:description" content="Guess today’s pro cyclist in 5 tries from their best result, then age, height, weight, country and team. A new rider every morning." />
+    <meta property="og:url" content="https://www.ucicle.fr/en/" />
+    <meta property="og:image" content="https://www.ucicle.fr/og/ucicle-en.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="A “?” mystery bib with its best result printed, and two pinned bibs comparing age, height, weight and country, the fifth in red: today’s mystery rider in 5 tries." />
+    <meta property="og:locale" content="en_GB" />
+    <meta property="og:locale:alternate" content="fr_FR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <script>
+      // Today's data, requested now, in parallel with the bundle (src/data/api.ts fetchToday).
+      window.ucicleData = Promise.all(['/api/riders.json', '/api/secret_rider.json'].map(function (u) {
+        return fetch(u, { cache: 'no-cache' }).then(function (r) {
+          if (!r.ok) throw new Error(u + ' answered ' + r.status);
+          return r.json();
+        });
+      }));
+      window.ucicleData.catch(function () {});
+    </script>
+    <link rel="stylesheet" href="/assets/scss/app.scss" />
+    <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "@id": "https://www.ucicle.fr/#website", "name": "Ucicle", "url": "https://www.ucicle.fr/", "inLanguage": ["fr", "en"]}, {"@type": "Game", "name": "Ucicle", "url": "https://www.ucicle.fr/en/", "inLanguage": "en", "description": "Guess today’s pro cyclist in 5 tries from their best result, then age, height, weight, country and team. A new rider every morning.", "isPartOf": {"@id": "https://www.ucicle.fr/#website"}}]}</script>
+  </head>
+  <body>
+    <noscript>Ucicle needs JavaScript to play.</noscript>
+    <div id="root">
+      <header class="site-header">
+        <div class="site-header-inner"><a class="wordmark" href="/en/">Ucicle</a></div>
+      </header>
+      <main id="main" class="game game-wait"><p class="game-status">The bunch is coming…</p></main>
+    </div>
+    <script type="module" src="/ts-built/index.js"></script>
+  </body>
+</html>

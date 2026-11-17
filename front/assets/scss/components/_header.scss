@@ -1,0 +1,177 @@
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--tarmac);
+  border-bottom: 1px solid var(--tarmac-rule);
+}
+
+.site-header-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  max-width: var(--content-max);
+  height: var(--header-h);
+  margin: 0 auto;
+  padding-left: var(--gutter-left);
+  padding-right: max(8px, env(safe-area-inset-right, 0px));
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-numeral);
+  font-weight: 900;
+  font-size: 1.875rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.site-nav ul {
+  display: flex;
+  gap: var(--sp-1);
+}
+
+.site-nav a {
+  display: block;
+  padding: var(--sp-2) var(--sp-3);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  border-radius: var(--r-control);
+
+  &[aria-current='page'] {
+    background: var(--tarmac-raised);
+  }
+}
+
+// From 1024 px: À propos, the tools and the language in one type system (band type), the language
+// quieter and set apart by a rule. Below 1024 px they live in the Menu panel and in the footer.
+.site-links,
+.site-language {
+  display: none;
+}
+
+.site-tools {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+}
+
+// The tool's name: for screen readers below 1024 px, written out from 1024 px.
+.tool-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (min-width: 1024px) {
+  .site-links {
+    display: flex;
+    gap: var(--sp-1);
+    margin-left: auto;
+  }
+
+  // One type system (D24): sections, À propos, the tool labels and the language share the band
+  // voice.
+  .site-links a,
+  .tool-label,
+  .site-language {
+    font-family: var(--font-bib);
+    font-stretch: var(--stretch-band);
+    font-weight: 800;
+    font-size: var(--fs-base);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .site-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 var(--sp-3);
+    text-decoration: none;
+  }
+
+  .site-links a[aria-current='page'] {
+    text-decoration: underline;
+    text-decoration-thickness: 3px;
+    text-underline-offset: 6px;
+  }
+
+  .site-tools {
+    margin-left: 0;
+  }
+
+  .site-tools .icon-button {
+    width: auto;
+    grid-auto-flow: column;
+    gap: var(--sp-2);
+    padding: 0 var(--sp-3);
+  }
+
+  .tool-label {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+  }
+
+  .tool-menu {
+    display: none;
+  }
+
+  // The language, "EN" / "FR": the same type, quieter, set apart from the tools by a 1 px rule
+  // instead of an underline (D24).
+  .site-language {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-width: 44px;
+    min-height: 44px;
+    margin-left: var(--sp-2);
+    padding: 0 var(--sp-3) 0 var(--sp-5);
+    color: var(--on-tarmac-2);
+    text-decoration: none;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 1px;
+      height: 1.5rem;
+      background: var(--tarmac-line);
+      translate: 0 -50%;
+    }
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .wordmark:hover,
+  .site-links a:hover,
+  .site-language:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 3px;
+    text-underline-offset: 6px;
+  }
+
+  .site-language:hover {
+    color: var(--on-tarmac);
+  }
+}
