@@ -17,10 +17,11 @@ Maintenance guide for the site: [front/AGENTS.md](front/AGENTS.md).
 
 ## Game rules
 
-- **One mystery rider per day**, drawn from the **UCI top 100**, published at 05:00 UTC
-  (cron `0 5 * * *`).
-- You can guess any rider of the published list: the UCI top 1000, minus riders whose data is
-  incomplete (see [functions/README.md](functions/README.md)).
+- **One mystery rider per day**, drawn from the **current UCI top 100** (riders whose team, height,
+  weight and best result are known), published at 05:00 UTC (cron `0 5 * * *`).
+- You can guess any rider from the **current UCI top 1000**, and any **former top 100 rider of a UCI
+  ranking since 2016**, retired ones included (Froome, Nibali, Valverde…). A rider who left the
+  ranking keeps their last UCI team; a rider of a club or a national team shows *Sans équipe UCI*.
 - **5 tries** maximum.
 - **Starting hint**: the mystery rider's best result, e.g. *"2 times 1st of the mountains
   classification of Tour de France in 2022 and 2023"*.
@@ -28,7 +29,7 @@ Maintenance guide for the site: [front/AGENTS.md](front/AGENTS.md).
 
   | Attribute            | Feedback on the guess bib                                                        |
   |----------------------|----------------------------------------------------------------------------------|
-  | Age, height, weight  | value with its unit; ↑ the mystery rider's is higher, ↓ lower; equal: blue cell with ✓ |
+  | Age, height, weight  | value with its unit; ↑ the mystery rider's is higher, ↓ lower; equal: blue cell with ✓; `?` in grey when the data has no height or weight for the guessed rider |
   | Country              | same: blue cell with ✓; different: the code in grey                              |
   | Team                 | on the bib's foot band; same: a blue ✓ tile before the name                      |
 
@@ -37,7 +38,7 @@ Maintenance guide for the site: [front/AGENTS.md](front/AGENTS.md).
 - **End of game**: right name, win; 5th wrong guess, loss. The mystery bib turns over and shows the
   rider, with a link to his rider page; its number becomes the score (`3/5` or `X/5`). *Partager*
   opens the phone's share sheet (clipboard elsewhere) with a result that never names the rider
-  (🔺/🔻: the mystery rider's value is higher/lower, 🟦 same, ⬛ different):
+  (🔺/🔻: the mystery rider's value is higher/lower, 🟦 same, ⬛ different, ⬜ unknown):
   ```
   Ucicle #1, trouvé en 3/5 🚴
   🔺🔺🔺⬛⬛
@@ -72,7 +73,7 @@ flowchart LR
 
 | Job | What it does | Writes |
 |---|---|---|
-| `LOAD_RIDERS` (function, cron `0 0 1 * *`) | UCI top 1000 from the UCI World Ranking, height and weight from Wikidata/Wikipedia, best result from each rider's UCI results | `api/riders.json` in the bucket |
+| `LOAD_RIDERS` (function, cron `0 0 1 * *`) | Current UCI top 1000 and the former top 100 riders of every ranking since 2016 from the UCI World Ranking, height and weight from Wikidata/Wikipedia (null when unknown), best result of the secret rider candidates from their UCI results. Drops only riders without country | `api/riders.json` in the bucket |
 | `GENERATE_SECRET_RIDER` (function, cron `0 5 * * *`) | Picks a random rider with UCI rank ≤ 100 from `riders.json` | `api/secret_rider.json` in the bucket |
 | `yarn collect --seasons …` / `--recent 14` | Men elite road calendar, races, classifications and results from UCI DataRide since 2019 (full, or the competitions touching the last 14 days) | `competition`, `race`, `classification`, `result`, riders, `job_run` |
 | `yarn rate` | Recomputes the whole index from zero and replaces the current version in one transaction | `rating_version`, `rating_change`, `rider_rating`, `ranking_snapshot` |
@@ -85,8 +86,10 @@ Details, options and the rating model: [functions/README.md](functions/README.md
 
 ```ts
 Rider       = { rank, name, country, age, weight, height, team, bestResult }
+              // rank null: former rider out of the ranking; weight, height null: unknown; team null: no UCI team;
+              // bestResult only for the secret rider candidates (current top 100 with height and weight), null otherwise
 BestResult  = { race, rank, raceType: 'GC' | 'Point GC' | 'KOM' | 'stage' | 'race', recurrence, years[] }
-GameSession = { date: 'YYYYMMDD', rider }   // content of secret_rider.json
+GameSession = { date: 'YYYYMMDD', rider }   // content of secret_rider.json; rider is always complete
 ```
 
 These types are **duplicated** in `front/src/types/` and `functions/src/types/`. Change both

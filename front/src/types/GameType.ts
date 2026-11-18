@@ -1,4 +1,4 @@
-import { Rider } from './CyclingTypes';
+import { Rider, SecretRider } from './CyclingTypes';
 
 /** A finished game, as stored in localStorage under `game-history` (shape kept from v1). */
 export type GameParticipation = {
@@ -11,7 +11,7 @@ export type GameParticipation = {
 /** Content of /api/secret_rider.json. */
 export type GameSession = {
   date: string, // YYYYMMDD
-  rider: Rider,
+  rider: SecretRider,
 };
 
 /** A game in progress, stored under `game-progress` so a reload keeps the tries. */

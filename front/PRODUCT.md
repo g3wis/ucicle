@@ -52,7 +52,8 @@ Cyclerly) lack one or the other (research synthesis, `.bunshin/research/synthesi
 
 ## Operating context
 
-- One mystery rider per day, drawn from the UCI top 100, published at 05:00 UTC.
+- One mystery rider per day, drawn from the current UCI top 100 (with known height, weight and best
+  result), published at 05:00 UTC.
 - Any rider of the published list can be guessed (685 riders, 57 countries, 116 teams on
   2026-11-16).
 - Five tries. Starting hint: the mystery rider's best result.
@@ -60,7 +61,7 @@ Cyclerly) lack one or the other (research synthesis, `.bunshin/research/synthesi
   and team compared (same, different).
 - The shared result (`src/game/share.ts`): the stage number and the score, then one row per try
   (age, height, weight, country, team): 🔺 the mystery value is higher, 🔻 lower, 🟦 equal or
-  same, ⬛ different; then the URL. 🟦 is the only blue tile, so a found row is the only all-blue
+  same, ⬛ different, ⬜ unknown (no height or weight for the guessed rider); then the URL. 🟦 is the only blue tile, so a found row is the only all-blue
   row.
 - No account. Game state and stats live in the browser's localStorage, on the `www.ucicle.fr`
   origin.
@@ -69,7 +70,10 @@ Cyclerly) lack one or the other (research synthesis, `.bunshin/research/synthesi
 
 - Data contract: `Rider = { rank, name, country, age, weight, height, team, bestResult }`,
   `BestResult = { race, rank, raceType, recurrence, years[] }`, `secret_rider.json =
-  { date: 'YYYYMMDD', rider }`. Countries are lowercase slugs ("united-states"); heights in metres
+  { date: 'YYYYMMDD', rider }`. `rank` is null for a former rider out of the ranking; `height`
+  and `weight` are null when unknown (the bib prints "?"); `team` is null for a rider of no UCI team
+  ("Sans équipe UCI"); `bestResult` is null except for the
+  secret rider candidates. The secret rider is always complete (`SecretRider`). Countries are lowercase slugs ("united-states"); heights in metres
   (1.8); raceType in the live data: GC, Points GC, KOM, stage, race.
 - The answer is readable client side (static JSON). It never goes into a URL, a share text or a
   preview image.

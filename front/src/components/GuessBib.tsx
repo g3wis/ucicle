@@ -66,7 +66,7 @@ export default function GuessBib({
           </span>
         )}
         <span className="sr-only">{`${content.game.attributes.team} `}</span>
-        <span className="bib-foot-team">{rider.team}</span>
+        <span className="bib-foot-team">{rider.team ?? content.game.noTeam}</span>
         <span className="sr-only">{`, ${content.game.same.team[team]}`}</span>
       </p>
     </Tag>

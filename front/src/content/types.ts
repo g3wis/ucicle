@@ -55,7 +55,12 @@ export type GameContent = {
     notIn: (values: string[]) => string,
   },
   attributes: Record<Attribute, string>,
+  /** `unknown`: the spoken text of a value the data does not have (a height or a weight). */
   trends: Record<NumericAttribute, Record<Trend, string>>,
+  /** The printed value of a cell the data does not have. */
+  unknownValue: string,
+  /** The team of a rider of no UCI team (a club or a national team). */
+  noTeam: string,
   same: Record<'country' | 'team', Record<Same, string>>,
   tryLabel: (n: number, max: number) => string,
   lastTry: string,

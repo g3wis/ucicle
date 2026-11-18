@@ -229,7 +229,9 @@ export default function RiderCombobox({
                   <span className="rider-option-name"><Highlight match={m} /></span>
                   <span className="rider-option-meta">
                     <span className="rider-option-country">{countryCode(m.rider.country)}</span>
-                    <span className="rider-option-team">{done ? g.combobox.alreadyPlayed : m.rider.team}</span>
+                    <span className="rider-option-team">
+                      {done ? g.combobox.alreadyPlayed : (m.rider.team ?? g.noTeam)}
+                    </span>
                   </span>
                 </li>
               );
