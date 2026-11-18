@@ -1,0 +1,21 @@
+---
+/**
+ * Below 1024 px: the data credit on its own line, then À propos and the language together. From
+ * 1024 px the header carries both links, so the footer keeps only the credit: each link once.
+ */
+import { common } from '../../content/common';
+import { otherLang, PAGES, type Alternates } from '../../app/nav';
+import type { Lang, PageKey } from '../../i18n/language';
+
+interface Props { lang: Lang; page: PageKey; alternates: Alternates | null }
+const { lang, page, alternates } = Astro.props;
+const c = common[lang];
+const other = otherLang(lang);
+---
+<footer class="site-footer">
+  <ul class="site-footer-inner">
+    <li class="footer-credit">{c.footer.data}</li>
+    <li class="footer-link"><a href={PAGES.about[lang]} aria-current={page === 'about' ? 'page' : undefined}>{c.footer.about}</a></li>
+    <li class="footer-link"><a href={alternates ? alternates[other] : PAGES.home[other]} hreflang={other} lang={other}>{c.footer.otherLanguage}</a></li>
+  </ul>
+</footer>

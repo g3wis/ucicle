@@ -41,7 +41,8 @@ export type AboutContent = {
 
 // Sources of the Data section: functions/README.md and functions/src (riderLoader.ts,
 // bestResult.ts, GenerateSecretRider.ts), commit 5cd4cbd. The top 1,000 is riderLoader.ts
-// RANKING_SIZE: change the 'Coureurs' / 'Riders' fact if that constant moves.
+// RANKING_SIZE: change the 'Coureurs du jeu' / 'Game riders' fact if that constant moves (it
+// describes the game's list only, not the index, which rates every rider of the UCI results).
 // Round numbers in running prose are spelled out (decisions/round-4.md, D25): "les mille
 // premiers", "les cent premiers"; "the top thousand", "the top hundred". Clock times (5 h UTC,
 // 05:00 UTC), the 52 weeks of the ranking and the scores the board prints (3/5, X/5, 2×) stay
@@ -55,7 +56,8 @@ export type AboutContent = {
 // OWNER: confirm https://github.com/g3wis/ucicle/issues may be shown as the place to report a data
 // error (public repository, issues open to players).
 
-// OWNER: legal mentions (publisher, host Scaleway, contact) to supply. When they exist, they go in
+// OWNER: legal mentions (publisher, host, contact) to supply; the site now runs on a Linux server
+// the owner provides, whose host is not named yet. When they exist, they go in
 // the privacy section (its title can become "Vie privée et mentions légales" /
 // "Privacy and legal notice"). Until then the page states only what is known.
 // OWNER: no audience measurement is known in the repository. Confirm there is none before adding
@@ -73,7 +75,12 @@ const fr: AboutContent = {
       },
       { term: 'Taille et poids', text: 'Wikidata, à défaut Wikipédia en anglais.' },
       {
-        term: 'Coureurs',
+        term: 'Index Ucicle',
+        text: 'Les résultats UCI des hommes élite sur route depuis 2019, recalculés chaque nuit. La méthode est '
+          + 'détaillée sur la page « Comment l’index est calculé ».',
+      },
+      {
+        term: 'Coureurs du jeu',
         text: 'Les mille premiers du classement mondial UCI sur route, hommes élite, dont on connaît '
           + 'l’équipe, le pays, la taille, le poids et au moins un résultat. Tu peux proposer n’importe lequel.',
       },
@@ -82,7 +89,7 @@ const fr: AboutContent = {
         text: 'Tiré au sort chaque jour à 5 h UTC parmi les cent premiers du classement. '
           + 'À Paris, c’est 6 h en hiver et 7 h en été.',
       },
-      { term: 'Mise à jour', text: 'La liste des coureurs est refaite une fois par mois.' },
+      { term: 'Coureurs du jeu, mise à jour', text: 'La liste des coureurs du jeu est refaite une fois par mois.' },
     ],
     hintTitle: 'L’indice de départ',
     hintText: [
@@ -123,7 +130,7 @@ const fr: AboutContent = {
         + 'Tes essais ne quittent pas ton appareil : c’est ton navigateur qui fait la comparaison.',
       'Sur un autre appareil ou un autre navigateur, tu repars de zéro. Effacer les données du site '
         + 'efface aussi ton historique.',
-      'Le site est un ensemble de fichiers statiques hébergés chez Scaleway.',
+      'Le site tourne sur un serveur avec une base de données, que la recherche de coureur interroge.',
     ],
   },
 };
@@ -140,7 +147,12 @@ const en: AboutContent = {
       },
       { term: 'Height and weight', text: 'Wikidata, or failing that English Wikipedia.' },
       {
-        term: 'Riders',
+        term: 'Ucicle index',
+        text: 'The UCI results of elite men on the road since 2019, recomputed every night. The method is '
+          + 'set out on the page “How the index is calculated”.',
+      },
+      {
+        term: 'Game riders',
         text: 'The top thousand of the UCI men’s elite road world ranking whose team, country, height, weight '
           + 'and at least one result are known. You can guess any of them.',
       },
@@ -148,7 +160,7 @@ const en: AboutContent = {
         term: 'Mystery rider',
         text: 'Drawn at random every day at 05:00 UTC from the top hundred of the ranking.',
       },
-      { term: 'Updates', text: 'The list of riders is rebuilt once a month.' },
+      { term: 'Game riders, updates', text: 'The list of the game’s riders is rebuilt once a month.' },
     ],
     hintTitle: 'The starting hint',
     hintText: [
@@ -188,7 +200,7 @@ const en: AboutContent = {
         + 'Your tries never leave your device: your browser does the comparison.',
       'On another device or another browser, you start from zero. Clearing the site’s data also '
         + 'clears your history.',
-      'The site is a set of static files hosted by Scaleway.',
+      'The site runs on a server with a database, which the rider search queries.',
     ],
   },
 };

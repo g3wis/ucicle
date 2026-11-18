@@ -28,3 +28,6 @@ build
 # testModule
 test
 package-lock.json
+# bunshin run state (local, never committed)
+.bunshin/
+.impeccable/

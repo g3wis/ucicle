@@ -50,7 +50,8 @@ module.exports = {
   },
   rules: {
     'linebreak-style': 'off',
-    'max-len': ["error", { "code": 120 }],
+    // SQL is written in tagged templates: a query line is never cut to fit.
+    'max-len': ['error', { code: 120, ignoreTemplateLiterals: true }],
     'react/require-default-props': 0,
     'import/no-absolute-path': 'off',
     'function-paren-newline': 'off',
@@ -77,4 +78,15 @@ module.exports = {
       'functions': false,
     }],
   },
+  overrides: [
+    {
+      // Content files hold the site's sentences: a sentence is never cut to fit a line.
+      files: ['src/content/**/*.ts'],
+      rules: {
+        'max-len': ['error', { code: 120, ignoreStrings: true, ignoreTemplateLiterals: true }],
+        // French typography: no-break spaces inside « » and before : ; ! ? in sentences.
+        'no-irregular-whitespace': ['error', { skipStrings: true, skipTemplates: true }],
+      },
+    },
+  ],
 };

@@ -1,0 +1,138 @@
+// The column of the index pages (home, ranking, rider page, method, search, 404): one width, one
+// title style, the same gutters as the game.
+
+.index-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding-block: var(--sp-5) var(--sp-7);
+  padding-left: var(--gutter-left);
+  padding-right: var(--gutter-right);
+}
+
+.page-title {
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-xl);
+  line-height: 1.05;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.page-lede {
+  max-width: 62ch;
+  color: var(--on-tarmac-2);
+  text-wrap: pretty;
+}
+
+// What the index tells, under the H1 of the home and the ranking (decision E4): the method page's
+// own line, in the text face, a step above the computed line.
+.index-lede {
+  max-width: 62ch;
+  color: var(--on-tarmac);
+  font-size: var(--fs-md);
+  text-wrap: pretty;
+}
+
+// The breadcrumb: Accueil / Classement / the page.
+.breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-2);
+  color: var(--on-tarmac-2);
+  font-size: var(--fs-sm);
+}
+
+.breadcrumb li + li::before {
+  content: '/';
+  margin-right: var(--sp-2);
+  color: var(--tarmac-line);
+}
+
+.breadcrumb a {
+  color: var(--on-tarmac-2);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .breadcrumb a:hover {
+    color: var(--on-tarmac);
+    text-decoration-thickness: 2px;
+  }
+}
+
+.section-title {
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-lg);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+// A note follows its heading on the same baseline, and wraps under it when space runs out.
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-start;
+  gap: var(--sp-2) var(--sp-4);
+}
+
+// A search that works without JavaScript: a GET form to /recherche/.
+.plain-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--sp-2);
+  max-width: 34rem;
+
+  label {
+    grid-column: 1 / -1;
+    font-weight: 700;
+    font-size: var(--fs-sm);
+  }
+
+  input {
+    --focus: var(--focus-on-tyvek);
+
+    width: 100%;
+    height: 48px;
+    padding: 0 var(--sp-3);
+    border: 0;
+    border-radius: var(--r-bib);
+    background: var(--tyvek);
+    color: var(--ink);
+    font-size: var(--fs-base);
+
+    &::placeholder {
+      color: var(--ink-2);
+      opacity: 1;
+    }
+
+    &:focus-visible {
+      outline-offset: -3px;
+    }
+  }
+}
+
+.not-found {
+  @extend .index-page;
+}
+
+// The 44 px links keep their text on the column's left edge: the link's own padding hangs into
+// the gutter.
+.not-found-links {
+  display: grid;
+  gap: 0;
+  justify-items: start;
+}
+
+.not-found-links a {
+  display: inline-flex;
+  align-items: center;
+  margin-left: calc(-1 * var(--sp-2));
+}

@@ -1,0 +1,180 @@
+---
+/**
+ * The ranking (direction contract "La liste des engagés"): the start list the commissaires print
+ * every night. The H1 and one computed line (riders classified, the day, the reference of the
+ * rank moves, the method); the search and "Aller au rang"; the page's 50 Tyvek strips, each rider
+ * wearing his rank as a bib numeral, between two rows of plain page links; who is not in it.
+ *
+ * From 1024 px (decision D5) the page is two columns: the start list, and a 16rem rail held under
+ * the header with the search, "Aller au rang", the computed line and the note. The rail comes
+ * first in the source, as the tools do on a phone; below 1024 px its wrappers are display:
+ * contents and the phone's order is untouched (styles in pages/_search.scss, "The rail"). The
+ * computed line and the note are printed twice (under the H1 and under the list for the phone,
+ * in the rail for the laptop) and CSS shows one, as the pagination does: the hidden one is
+ * display: none. In the rail the method is linked once.
+ */
+import Base from '../../layouts/Base.astro';
+import StartList from '../../components/index/StartList.astro';
+import RiderSearch from '../../components/search/RiderSearch.astro';
+import RankJump from '../../components/search/RankJump.astro';
+import Pagination from './Pagination.astro';
+import { ranking as copy } from '../../content/ranking';
+import { method } from '../../content/method';
+import { formatDay, formatIndex, formatOrdinal } from '../../i18n/format';
+import {
+  absolute, PAGES, rankingPagePath, riderPath,
+} from '../../app/nav';
+import type { Lang } from '../../i18n/language';
+import type { RankingData } from './load';
+
+interface Props { lang: Lang; data: RankingData }
+const { lang, data } = Astro.props;
+const c = copy[lang];
+const {
+  version, page, pages, count, from, to, riders,
+} = data;
+
+const asOf = formatDay(version.asOf, lang);
+const countText = formatIndex(count, lang);
+const fromText = formatIndex(from, lang);
+const toText = formatIndex(to, lang);
+
+const title = page === 1
+  ? c.head.title(asOf)
+  : c.head.titlePage(formatOrdinal(from, lang), formatOrdinal(to, lang));
+const description = page === 1
+  ? c.head.description({
+    count: countText,
+    date: asOf,
+    top: riders.slice(0, 3).map((r) => ({ rank: formatOrdinal(r.rank, lang), name: r.name })),
+  })
+  : c.head.descriptionPage({
+    from: fromText,
+    to: toText,
+    date: asOf,
+    first: riders[0]?.name ?? null,
+    last: riders[riders.length - 1]?.name ?? null,
+  });
+
+const path = rankingPagePath(lang, page);
+const alternates = { fr: rankingPagePath('fr', page), en: rankingPagePath('en', page) };
+const listName = c.head.listName(fromText, toText);
+
+const crumbs = [
+  { name: c.breadcrumb.home, path: PAGES.home[lang] },
+  { name: c.breadcrumb.ranking, path: PAGES.ranking[lang] },
+  ...(page > 1 ? [{ name: c.breadcrumb.page(page), path }] : []),
+];
+const url = absolute(path);
+const jsonLd = [
+  {
+    '@type': 'CollectionPage',
+    '@id': url,
+    url,
+    name: title,
+    description,
+    inLanguage: lang,
+    dateModified: version.updatedAt ?? version.asOf,
+    isPartOf: { '@id': absolute('/#website') },
+    mainEntity: { '@id': `${url}#list` },
+    breadcrumb: { '@id': `${url}#breadcrumb` },
+  },
+  {
+    '@type': 'ItemList',
+    '@id': `${url}#list`,
+    name: listName,
+    numberOfItems: riders.length,
+    itemListOrder: 'https://schema.org/ItemListOrderAscending',
+    itemListElement: riders.map((r) => ({
+      '@type': 'ListItem',
+      position: r.rank,
+      url: absolute(riderPath(lang, r.slug)),
+      name: r.name,
+    })),
+  },
+  {
+    '@type': 'BreadcrumbList',
+    '@id': `${url}#breadcrumb`,
+    itemListElement: crumbs.map((crumb, i) => ({
+      '@type': 'ListItem', position: i + 1, name: crumb.name, item: absolute(crumb.path),
+    })),
+  },
+];
+
+// The move column and its legend only when a rider of this page moved: a column of '=' says
+// nothing and costs the names their width at 390 px.
+const showMoves = riders.some((r) => r.rankMove !== null && r.rankMove !== 0);
+
+const threshold = data.experienceThreshold === null ? null : formatIndex(data.experienceThreshold, lang);
+const days = data.activeDays === null ? null : formatIndex(data.activeDays, lang);
+const movesSince = formatDay(data.movesSince, lang);
+---
+<Base
+  lang={lang}
+  page="ranking"
+  title={title}
+  description={description}
+  path={path}
+  alternates={alternates}
+  jsonLd={jsonLd}
+>
+  <main id="main" class="index-page ranking-page">
+    <nav class="breadcrumb" aria-label={c.breadcrumb.label}>
+      <ol>
+        {crumbs.map((crumb, i) => (
+          <li>
+            {i === crumbs.length - 1
+              ? <span aria-current="page">{crumb.name}</span>
+              : <a href={crumb.path}>{crumb.name}</a>}
+          </li>
+        ))}
+      </ol>
+    </nav>
+
+    <header class="ranking-head">
+      <h1 class="page-title">{c.title}</h1>
+      <p class="index-lede">{method[lang].uci.text}</p>
+      <p class="page-lede ranking-line">
+        {c.count(count, countText, asOf)}
+        {showMoves && <>{' '}<span class="ranking-moves">{c.moves.before} <span aria-hidden="true">{c.moves.glyphs}</span> {c.moves.after(movesSince)}</span></>}
+        {' '}<a class="ranking-method" href={PAGES.method[lang]}>{c.methodLink}</a>
+      </p>
+    </header>
+
+    <div class="list-columns">
+      <div class="list-rail ranking-rail">
+        {count > 0 && (
+          <div class="ranking-tools">
+            <RiderSearch lang={lang} id="ranking-search" />
+            <RankJump lang={lang} count={count} id="ranking-rank" />
+          </div>
+        )}
+        <div class="ranking-about">
+          <p>
+            {c.count(count, countText, asOf)}
+            {showMoves && <>{' '}<span class="ranking-moves">{c.moves.before} <span aria-hidden="true">{c.moves.glyphs}</span> {c.moves.after(movesSince)}</span></>}
+          </p>
+          <p>{c.note({ threshold, days })}</p>
+          <p><a class="ranking-method" href={PAGES.method[lang]}>{c.methodLink}</a></p>
+        </div>
+      </div>
+
+      <section class="list-column ranking-list" aria-labelledby={count > 0 ? 'ranking-list-title' : undefined}>
+        {count > 0 && (
+          <div class="section-head ranking-list-head">
+            <h2 id="ranking-list-title" class="section-title">{c.listTitle(fromText, toText)}</h2>
+            <Pagination lang={lang} page={page} pages={pages} label={c.pagination.top} />
+          </div>
+        )}
+        {riders.length > 0
+          ? <StartList riders={riders} lang={lang} label={listName} moves={showMoves} anchors />
+          : <p class="ranking-empty">{c.empty}</p>}
+        <Pagination lang={lang} page={page} pages={pages} label={c.pagination.bottom} />
+        <p class="ranking-note">
+          {c.note({ threshold, days })}
+          {' '}<a href={PAGES.method[lang]}>{c.noteLink}</a>
+        </p>
+      </section>
+    </div>
+  </main>
+</Base>

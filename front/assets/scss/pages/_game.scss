@@ -117,6 +117,13 @@
 // The verdict sentence, visually hidden (.sr-only). Focused by script when the stage ends
 // (tabIndex -1, not a control): screen readers read it, and the next Tab lands on Partager, which
 // has its own ring.
+.result-rider {
+  justify-self: center;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
 .result-title:focus,
 .result-title:focus-visible {
   outline: none;

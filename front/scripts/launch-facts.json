@@ -1,11 +1,60 @@
 {
   "_comment": "Facts the owner must supply or confirm before the redesign goes live. Set confirmed to true once done. `yarn build` lists what is still open; LAUNCH_STRICT=1 yarn build fails while anything is open.",
   "facts": [
-    { "id": "legal", "confirmed": false, "what": "Legal mentions (LCEN): publisher identity, host details (Scaleway), a contact. Add them to src/content/about.ts (privacy section)." },
-    { "id": "stage-origin", "confirmed": false, "what": "The date of 'Étape 1' (STAGE_ORIGIN in src/game/stage.ts, today 20261116 as an assumption). It must never change once published." },
-    { "id": "report-error", "confirmed": false, "what": "May https://github.com/g3wis/ucicle/issues be shown to players as the place to report a data error?" },
-    { "id": "no-ads", "confirmed": false, "what": "Commit (or not) to 'sans publicité / no advertising' on the About page; it is left out until confirmed." },
-    { "id": "data-fresh", "confirmed": false, "what": "The live riders.json looks about 2023 (ages, teams such as Jumbo-Visma). Run the DataRide loader (functions LOAD_RIDERS) so the About page's data description and the board match reality." },
-    { "id": "gzip-check", "confirmed": false, "what": "After the first deploy with the new deploy.js: curl -sI --compressed https://www.ucicle.fr/ shows content-encoding: gzip and the page loads." }
+    {
+      "id": "legal",
+      "confirmed": false,
+      "what": "Legal mentions (LCEN): publisher identity, the host of the Linux server (name, address, phone), a contact. Add them to src/content/about.ts (privacy section)."
+    },
+    {
+      "id": "stage-origin",
+      "confirmed": false,
+      "what": "The date of 'Étape 1' (STAGE_ORIGIN in src/game/stage.ts, today 20261116 as an assumption). It must never change once published."
+    },
+    {
+      "id": "report-error",
+      "confirmed": false,
+      "what": "May https://github.com/g3wis/ucicle/issues be shown to players as the place to report a data error?"
+    },
+    {
+      "id": "no-ads",
+      "confirmed": false,
+      "what": "Commit (or not) to 'sans publicité / no advertising' on the About page; it is left out until confirmed."
+    },
+    {
+      "id": "data-fresh",
+      "confirmed": false,
+      "what": "The live riders.json looks about 2023 (ages, teams such as Jumbo-Visma). Run the DataRide loader (functions LOAD_RIDERS) so the About page's data description and the board match reality."
+    },
+    {
+      "id": "gzip-check",
+      "confirmed": false,
+      "what": "After the first deploy on the Linux server (deploy/README.md): curl -sI --compressed https://www.ucicle.fr/ shows content-encoding: gzip, the home answers 200, and /sitemap-index.xml lists the rider sitemaps."
+    },
+    {
+      "id": "dataride-terms",
+      "confirmed": false,
+      "what": "Reuse of UCI DataRide results for the index: no licence or terms were found. Get the UCI's written answer before launch (PRODUCT.md, 'Pending for launch')."
+    },
+    {
+      "id": "server",
+      "confirmed": false,
+      "what": "The Linux server: its address, DNS for ucicle.fr and www.ucicle.fr, TLS certificates, and the GitHub secrets of the CD workflow (deploy/README.md). Then the first full collect backfill and rate."
+    },
+    {
+      "id": "rider-duplicates",
+      "confirmed": false,
+      "what": "Rider identities duplicated in the UCI's own records (rider_review: possible_duplicate, registry_duplicate): review them before launch; there is no merge tool yet (functions/SCHEMA.md)."
+    },
+    {
+      "id": "og-per-rider",
+      "confirmed": false,
+      "what": "Per-rider share images would need two new dependencies (satori, @resvg/resvg-js). Index pages use public/og/index.png until the owner decides."
+    },
+    {
+      "id": "start-list-sheet",
+      "confirmed": false,
+      "what": "Art direction question left open: keep one Tyvek strip per rider (validated contract), or print each start list as one sheet with a head band (cold-eyes proposal, rejected for v1). Owner's call."
+    }
   ]
 }

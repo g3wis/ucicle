@@ -1,0 +1,104 @@
+---
+/**
+ * The search without JavaScript (/recherche/?q=, /en/search/?q=), kept out of the index: the H1
+ * with the query, the search field again, then every match (50 at most) as Tyvek strips. A ranked
+ * rider wears his rank as the strip's bib numeral; a provisional or inactive rider wears a strip
+ * with no number and his status word. A query under 2 letters gets the field only.
+ *
+ * From 1024 px (decision D5), with an answer to print, the page is the ranking's two columns: the
+ * matches (or the sentence) take the column and the field sits in the 16rem rail beside them,
+ * held under the header. The rail comes first in the source, as the field does on a phone; below
+ * 1024 px its wrappers are display: contents (pages/_search.scss, "The rail"). With nothing to
+ * list (no query, a query too short) the field stays alone in the column.
+ */
+import Base from '../../layouts/Base.astro';
+import RiderSearch from '../../components/search/RiderSearch.astro';
+import { search as copy } from '../../content/search';
+import { indexCommon } from '../../content/index-common';
+import { formatIndex, nationName } from '../../i18n/format';
+import { PAGES, riderPath } from '../../app/nav';
+import type { Lang } from '../../i18n/language';
+import type { SearchData } from './load';
+
+interface Props { lang: Lang; data: SearchData }
+const { lang, data } = Astro.props;
+const c = copy[lang].page;
+const ic = indexCommon[lang];
+const { query, riders, total } = data;
+const hasQuery = query.length > 0;
+
+const queryPath = (l: Lang) => (hasQuery ? `${PAGES.search[l]}?q=${encodeURIComponent(query)}` : PAGES.search[l]);
+const title = hasQuery ? c.headTitleQuery(query) : c.headTitle;
+const description = hasQuery ? c.descriptionQuery(query) : c.description;
+---
+<Base
+  lang={lang}
+  page="search"
+  title={title}
+  description={description}
+  path={queryPath(lang)}
+  alternates={{ fr: queryPath('fr'), en: queryPath('en') }}
+  noindex
+>
+  <main id="main" class="index-page search-page">
+    <h1 class="page-title">{hasQuery && !data.short ? c.titleQuery(query) : c.title}</h1>
+
+    {data.short && (
+      <>
+        <RiderSearch lang={lang} id="search-page" value={query} />
+        {hasQuery && <p class="search-message">{c.short}</p>}
+      </>
+    )}
+
+    {!data.short && (
+      <div class="list-columns">
+        <div class="list-rail search-rail">
+          <RiderSearch lang={lang} id="search-page" value={query} />
+        </div>
+
+        {data.rankOut && (
+          <div class="list-column search-message">
+            <p>{c.rankOut(formatIndex(data.rankOut.rank, lang), formatIndex(data.rankOut.count, lang))}</p>
+            <p><a class="search-link" href={PAGES.ranking[lang]}>{c.rankingLink}</a></p>
+          </div>
+        )}
+
+        {!data.rankOut && (
+          <section class="list-column search-results" aria-labelledby="search-count">
+            {riders.length > 0
+              ? <h2 id="search-count" class="search-count">{c.count(total, formatIndex(total, lang), riders.length)}</h2>
+              : (
+                <div class="search-message">
+                  <h2 id="search-count" class="search-count">{c.none(query)}</h2>
+                  <p>{ic.scope}</p>
+                  <p><a class="search-link" href={PAGES.ranking[lang]}>{c.rankingLink}</a></p>
+                </div>
+              )}
+            {riders.length > 0 && (
+              <ul class="start-list search-list" aria-label={c.listLabel(query)}>
+                {riders.map((r) => (
+                  <li class="strip search-strip" data-ranked={r.rank !== null ? 'true' : 'false'}>
+                    {r.rank !== null
+                      ? <span class="strip-rank" data-digits={String(r.rank).length}><span class="sr-only">{ic.rank} </span>{r.rank}</span>
+                      : <span class="strip-rank search-rank-none" aria-hidden="true" />}
+                    <span class="strip-who">
+                      <a class="strip-name" href={riderPath(lang, r.slug)}>{r.name}</a>
+                      {r.team && <span class="strip-team">{r.team}</span>}
+                    </span>
+                    {r.nationCode
+                      ? <span class="strip-nation"><span aria-hidden="true">{r.nationCode}</span><span class="sr-only">{nationName(r.nationIso2, lang) ?? r.nationCode}</span></span>
+                      : <span class="strip-nation" aria-hidden="true" />}
+                    <span class="strip-index search-value">
+                      {r.status !== 'classified' && <span class="search-status">{r.status ? ic.status[r.status] : copy[lang].noIndex}</span>}
+                      {r.index !== null && <span class="search-index"><span class="sr-only">{ic.index} </span>{formatIndex(r.index, lang)}</span>}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
+      </div>
+    )}
+  </main>
+</Base>

@@ -1,0 +1,118 @@
+---
+/**
+ * The index history: an ink line on a Tyvek panel, ruled like the bib's printed line (a baseline
+ * and two dotted reference rules on round values), one point per counted race day. The index only
+ * moves on a race day, so the line is a step line: it holds its value until the day, then moves
+ * vertically. The axis ticks years, or quarters (January, April, July, October) when the history
+ * spans less than 18 months; a short history (under 20 race days) marks each day with a dot. The
+ * 2019 warm-up is a thinner grey line, labelled; the best index is marked with its value and date. The
+ * drawing is an SVG stretched to the panel (non-scaling strokes); every label is HTML placed in
+ * percent, so it stays at its real size from 320 px to 1440 px. The line draws once (420 ms).
+ */
+import { formatIndex, parseDay } from '../../i18n/format';
+import { LOCALES } from '../../i18n/language';
+import type { Lang } from '../../i18n/language';
+import type { HistoryPoint } from './load';
+
+interface Props {
+  points: HistoryPoint[];
+  best: { value: number, date: string } | null;
+  lang: Lang;
+  /** The chart's accessible description (from, to, best). */
+  label: string;
+  warmUpLabel: string;
+  bestLabel: string | null;
+}
+const {
+  points, best, lang, label, warmUpLabel, bestLabel,
+} = Astro.props;
+
+const t = (d: string) => parseDay(d).getTime();
+const t0 = t(points[0].date);
+const t1 = Math.max(t(points[points.length - 1].date), t0 + 86_400_000);
+const values = points.map((p) => p.index);
+const lo = Math.floor((Math.min(...values) - 15) / 50) * 50;
+const hi = Math.ceil((Math.max(...values) + 15) / 50) * 50;
+// The middle rule on a round value, only when it falls strictly between the two others.
+const midRound = Math.round((lo + hi) / 2 / 50) * 50;
+const mid = midRound > lo && midRound < hi ? midRound : null;
+// Drawing space: 0..1000 on both axes. The line is kept off the panel's left edge by 4 % and
+// ends at 86 %, clear of the rule values on the right; vertically it stays within 10 % to 92 %.
+const X = (d: string) => 40 + ((t(d) - t0) / (t1 - t0)) * 820;
+const Y = (v: number) => 100 + ((hi - v) / (hi - lo)) * 820;
+// A step line: flat until the next race day, then vertical to that day's index.
+const path = (pts: HistoryPoint[]) => pts.map((p, i) => (i
+  ? `H${X(p.date).toFixed(1)} V${Y(p.index).toFixed(1)}`
+  : `M${X(p.date).toFixed(1)} ${Y(p.index).toFixed(1)}`)).join(' ');
+const WARM_END = '2020-01-01';
+const warm = points.filter((p) => p.date < WARM_END);
+const main = points.filter((p) => p.date >= WARM_END);
+// The published line starts from the last warm-up point, so the two parts join.
+const mainPts = warm.length && main.length ? [warm[warm.length - 1], ...main] : main;
+// The axis: years, or quarters for a history shorter than 18 months (January shows its year).
+const first = parseDay(points[0].date);
+const last = parseDay(points[points.length - 1].date);
+const months = (last.getUTCFullYear() - first.getUTCFullYear()) * 12 + last.getUTCMonth() - first.getUTCMonth();
+const quarterly = months < 18;
+const monthName = (y: number, m: number) => new Intl.DateTimeFormat(LOCALES[lang], { month: 'short', timeZone: 'UTC' })
+  .format(new Date(Date.UTC(y, m, 1)));
+const day = (y: number, m: number) => `${y}-${String(m + 1).padStart(2, '0')}-01`;
+const ticks: { label: string, x: number }[] = [];
+if (quarterly) {
+  let y = first.getUTCFullYear();
+  let m = Math.floor(first.getUTCMonth() / 3) * 3 + 3;
+  for (; ; m += 3) {
+    if (m > 11) { y += 1; m -= 12; }
+    if (t(day(y, m)) > t1) break;
+    ticks.push({ label: m === 0 ? String(y) : monthName(y, m), x: X(day(y, m)) / 10 });
+  }
+} else {
+  for (let y = first.getUTCFullYear() + 1; y <= last.getUTCFullYear(); y += 1) ticks.push({ label: String(y), x: X(`${y}-01-01`) / 10 });
+}
+const firstTick = {
+  label: quarterly ? `${monthName(first.getUTCFullYear(), first.getUTCMonth())} ${first.getUTCFullYear()}` : String(first.getUTCFullYear()),
+  x: 4,
+};
+// The first label only when the next tick leaves room for it (46 px at the narrowest panel).
+const showFirst = !ticks.length || ticks[0].x > (quarterly ? 22 : 16);
+const dots = points.length < 20 ? points.map((p) => ({ x: X(p.date) / 10, y: Y(p.index) / 10 })) : [];
+const bestPoint = best ? { x: X(best.date) / 10, y: Y(best.value) / 10 } : null;
+const rules = [
+  { v: hi, dotted: true },
+  ...(mid !== null ? [{ v: mid, dotted: true }] : []),
+  { v: lo, dotted: false },
+];
+---
+<figure class="history-chart">
+  <div class="history-panel" role="img" aria-label={label}>
+    <svg class="history-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      {rules.map((r) => (
+        <line class:list={['history-rule', { 'history-rule-dotted': r.dotted }]} x1="0" x2="1000" y1={Y(r.v)} y2={Y(r.v)} />
+      ))}
+      {ticks.map((y) => <line class="history-tick" x1={y.x * 10} x2={y.x * 10} y1={Y(lo)} y2={Y(lo) + 10} />)}
+      <g class="history-lines">
+        {warm.length > 1 && <path class="history-line history-warm" d={path(warm)} />}
+        {mainPts.length > 1 && <path class="history-line" d={path(mainPts)} />}
+      </g>
+    </svg>
+    {rules.map((r) => (
+      <span class="history-rule-label" style={`top:${(Y(r.v) / 10).toFixed(2)}%`} aria-hidden="true">{formatIndex(r.v, lang)}</span>
+    ))}
+    {showFirst && <span class="history-year history-year-first" style={`left:${firstTick.x}%`} aria-hidden="true">{firstTick.label}</span>}
+    {ticks.map((y) => <span class="history-year" style={`left:${y.x.toFixed(2)}%`} aria-hidden="true">{y.label}</span>)}
+    {dots.map((d) => <span class="history-dot" style={`left:${d.x.toFixed(2)}%;top:${d.y.toFixed(2)}%`} aria-hidden="true" />)}
+    {warm.length > 1 && (
+      <span class="history-warm-label" style={`left:${(X(warm[0].date) / 10).toFixed(2)}%;top:${(Y(warm[0].index) / 10).toFixed(2)}%`} aria-hidden="true">{warmUpLabel}</span>
+    )}
+    {bestPoint && bestLabel && (
+      <>
+        <span class="history-best-dot" style={`left:${bestPoint.x.toFixed(2)}%;top:${bestPoint.y.toFixed(2)}%`} aria-hidden="true" />
+        <span
+          class:list={['history-best-label', { 'history-best-label-end': bestPoint.x > 70 }]}
+          style={`left:${bestPoint.x.toFixed(2)}%;top:${bestPoint.y.toFixed(2)}%`}
+          aria-hidden="true"
+        >{bestLabel}</span>
+      </>
+    )}
+  </div>
+</figure>

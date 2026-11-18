@@ -1,0 +1,814 @@
+// The method page (src/views/method). On the road: the text, about 65 characters a line, and the
+// tables, ruled like the rider page's season table (a header rule, no rule around rows). On
+// Tyvek: the formula sheet and the real race, whose printed lines keep their rules between values
+// only. Shared pieces live in components/_strip.scss and components/_page.scss.
+
+.method-head {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.method-version {
+  color: var(--on-tarmac);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-md);
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  text-transform: uppercase;
+}
+
+// Figures speak in the bib's numerals (decision D7), as the ranking's index and the rider's season
+// table do: Archivo at band width, 800, tabular figures. Atkinson stays the voice of prose and
+// labels, so its slashed zero never prints in a figure column.
+@mixin method-figure {
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+// The page index and the sections (decision D5). Below 1200 px the index stays under the lede,
+// one link per line. From 1200 px it is a rail on the right of the column that sticks under the
+// header while the sections scroll beside it; the sections keep the text's 65-character measure,
+// so every block of the page ends on the same right edge.
+.method-layout,
+.method-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-6);
+}
+
+.method-toc ul {
+  display: grid;
+  justify-items: start;
+}
+
+.method-toc li {
+  display: flex;
+}
+
+.method-toc a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-sm);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-underline-offset: 3px;
+}
+
+@media (min-width: 1200px) {
+  .method-layout {
+    grid-template-columns: minmax(0, 65ch) minmax(12rem, 16rem);
+    justify-content: space-between;
+    align-items: start;
+    column-gap: var(--sp-7);
+  }
+
+  // The rail comes first in the reading order, as below 1200 px; only its place changes.
+  .method-toc {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .method-body {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+// It sticks only where the whole index (11 links of 44 px) fits under the header: no link is
+// ever held out of view.
+@media (min-width: 1200px) and (min-height: 640px) {
+  .method-toc {
+    position: sticky;
+    top: calc(var(--header-h) + 1px + var(--sp-5));
+  }
+}
+
+.method-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-4);
+  min-width: 0;
+}
+
+// Running text keeps a printed measure.
+.method-text {
+  max-width: 65ch;
+
+  p + p {
+    margin-top: var(--sp-3);
+  }
+}
+
+.method-subtitle {
+  color: var(--on-tarmac-2);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-sm);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.method-list {
+  display: grid;
+  gap: var(--sp-3);
+  max-width: 65ch;
+}
+
+.method-statement {
+  max-width: 40ch;
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.method-link {
+  color: inherit;
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
+
+.method-end {
+  margin-top: calc(var(--sp-4) * -1);
+
+  .text-link {
+    margin-left: calc(var(--sp-2) * -1);
+  }
+}
+
+.method-lead {
+  font-weight: 700;
+}
+
+// ---- Tables on the road --------------------------------------------------------------------
+
+.method-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+
+  th,
+  td {
+    padding: var(--sp-2) var(--sp-3) var(--sp-2) 0;
+    text-align: left;
+    vertical-align: baseline;
+  }
+
+  th:last-child,
+  td:last-child {
+    padding-right: 0;
+  }
+
+  thead th {
+    border-bottom: 2px solid var(--tarmac-line);
+    color: var(--on-tarmac-2);
+    font-family: var(--font-bib);
+    font-stretch: var(--stretch-band);
+    font-weight: 800;
+    font-size: var(--fs-2xs);
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    vertical-align: bottom;
+  }
+
+  tbody th {
+    font-weight: 700;
+  }
+
+  tfoot th,
+  tfoot td {
+    border-top: 2px solid var(--tarmac-line);
+  }
+
+  .num {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  tbody .num,
+  tfoot .num {
+    @include method-figure;
+  }
+}
+
+// Two measures down the page: the prose's 65ch for the text and the small tables, full width for
+// the Tyvek sheets, the weights pair and the season bands (up to 1200 px; then the whole column
+// keeps the 65ch measure, beside the page index).
+.method-table-gap,
+.method-table-versions,
+.method-table-params {
+  max-width: 65ch;
+}
+
+.method-table-params {
+
+  tbody th {
+    width: 45%;
+  }
+}
+
+// A figure cell, or the figure of a value told with its words ("30 arrivants"): the bib's numerals.
+.method-value,
+.method-sum,
+.method-figure {
+  @include method-figure;
+}
+
+// Codes in band type, like the season table's first column.
+.method-code {
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+// A day stays on one line where the table has the room (a 320 px phone does not).
+@media (min-width: 400px) {
+  .method-day {
+    white-space: nowrap;
+  }
+}
+
+.method-zero {
+  color: var(--on-tarmac-2);
+}
+
+.method-warm {
+  display: block;
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+}
+
+.method-caption {
+  padding-bottom: var(--sp-2);
+  color: var(--on-tarmac-2);
+  font-size: var(--fs-sm);
+  text-align: left;
+}
+
+.method-note {
+  max-width: 65ch;
+  color: var(--on-tarmac-2);
+  font-size: var(--fs-sm);
+}
+
+.method-weights {
+  display: grid;
+  gap: var(--sp-6);
+  align-items: start;
+}
+
+.method-weights-table {
+  display: grid;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+@media (min-width: 900px) {
+  .method-weights {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: var(--sp-7);
+  }
+}
+
+// Beside the page index the column is the text's 65ch: the two tables stack at that measure.
+@media (min-width: 1200px) {
+  .method-weights {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sp-6);
+  }
+}
+
+// The counted classifications: classes down, seasons across. The only table that can be wider
+// than a phone: it scrolls inside its own region, the class column held in place.
+.method-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+
+  &:focus-visible {
+    outline-offset: 4px;
+  }
+}
+
+.method-table-counted {
+  min-width: max-content;
+
+  th,
+  td {
+    padding-right: var(--sp-4);
+  }
+
+  th[scope='row'],
+  thead th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    padding-right: var(--sp-4);
+    background: var(--tarmac);
+  }
+}
+
+@media (min-width: 768px) {
+  .method-table-counted {
+    width: auto;
+    min-width: 0;
+
+    th,
+    td {
+      padding-right: var(--sp-5);
+    }
+  }
+}
+
+// Beside the page index the column is 65ch: the table takes it, and ends on the text's edge.
+@media (min-width: 1200px) {
+  .method-table-counted {
+    width: 100%;
+  }
+}
+
+// ---- Tyvek sheets: the real race and the formula -------------------------------------------
+
+.method-sheet {
+  --focus: var(--focus-on-tyvek);
+
+  background: var(--tyvek);
+  color: var(--ink);
+  border-radius: var(--r-bib);
+  box-shadow: 0 1px 0 rgb(0 0 0 / 35%);
+}
+
+// The ink band: the race, its day and its class, in spaced capitals.
+.method-sheet-band {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-1) var(--sp-4);
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--r-bib) var(--r-bib) 0 0;
+  background: var(--ink);
+  color: var(--tyvek);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-sm);
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  text-transform: uppercase;
+}
+
+.method-sheet-class {
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+.method-sheet-body {
+  display: grid;
+  gap: var(--sp-5);
+  padding: var(--sp-4) var(--sp-4) var(--sp-5);
+}
+
+.method-sheet-text {
+  color: var(--ink);
+}
+
+.example-riders {
+  display: grid;
+  gap: var(--sp-6);
+}
+
+.example-rider {
+  display: grid;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.example-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-1) var(--sp-3);
+  font-size: var(--fs-md);
+  line-height: 1.25;
+}
+
+.example-place {
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.example-name {
+  min-width: 0;
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+
+.example-delta {
+  @include method-figure;
+
+  margin-left: auto;
+  font-size: var(--fs-md);
+}
+
+// The printed line: four values, rules between them only.
+.example-line {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  margin: 0;
+  border-top: 1px solid var(--ink-line);
+  border-bottom: 1px solid var(--ink-line);
+}
+
+.example-cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-3);
+  border-left: 1px solid var(--ink-line);
+
+  &:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  dt {
+    color: var(--ink-2);
+    font-size: var(--fs-2xs);
+    line-height: 1.2;
+  }
+
+  dd {
+    @include method-figure;
+
+    margin: 0;
+    font-size: var(--fs-lg);
+    line-height: 1.1;
+  }
+}
+
+.example-note {
+  color: var(--ink-2);
+  font-size: var(--fs-sm);
+}
+
+// The change recomputed in front of the reader.
+.example-calc {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+
+  strong {
+    font-family: var(--font-bib);
+    font-stretch: var(--stretch-band);
+    font-weight: 800;
+    font-size: var(--fs-md);
+  }
+}
+
+.example-calc-term {
+  font-weight: 700;
+}
+
+.example-result {
+  white-space: nowrap;
+}
+
+@media (max-width: 420px) {
+  .example-cell {
+    padding-left: var(--sp-2);
+
+    dd {
+      font-size: var(--fs-md);
+    }
+  }
+}
+
+@media (min-width: 768px) {
+  .method-sheet-band,
+  .method-sheet-body {
+    padding-left: var(--sp-5);
+    padding-right: var(--sp-5);
+  }
+
+  .example-rider {
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+    column-gap: var(--sp-5);
+    align-items: baseline;
+  }
+
+  .example-head {
+    grid-row: span 4;
+    align-self: start;
+    flex-direction: column;
+    gap: var(--sp-1);
+  }
+
+  .example-delta {
+    margin-left: 0;
+  }
+
+  .example-line,
+  .example-note,
+  .example-calc {
+    grid-column: 2;
+  }
+}
+
+// The formula, typeset as text: a stacked fraction is two lines and a bar, nothing more.
+.formula-sheet {
+  display: grid;
+  gap: var(--sp-6);
+  padding: var(--sp-5) var(--sp-4);
+}
+
+.formula-lines {
+  display: grid;
+  gap: var(--sp-5);
+  align-content: start;
+}
+
+@media (min-width: 768px) {
+  .formula-sheet {
+    padding: var(--sp-6) var(--sp-5);
+  }
+}
+
+@media (min-width: 1024px) {
+  .formula-sheet {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: var(--sp-7);
+  }
+}
+
+// Beside the page index the sheet is 65ch wide: the symbols go under the formulas.
+@media (min-width: 1200px) {
+  .formula-sheet {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sp-6);
+  }
+}
+
+.formula {
+  font-size: var(--fs-lg);
+  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
+
+  var {
+    font-style: normal;
+    font-weight: 700;
+  }
+
+  sub,
+  sup {
+    font-size: 0.7em;
+    line-height: 0;
+  }
+}
+
+// The .2 multiplier under the K line: a note, not a factor of the same rank. On its own line, so
+// the formula above never breaks inside it at 390 px.
+.formula-aside {
+  display: block;
+  color: var(--ink-2);
+  font-size: 0.75em;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: stretch;
+  margin: 0 0.1em;
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.frac-num {
+  padding: 0 0.25em 0.15em;
+}
+
+.frac-den {
+  padding: 0.3em 0.25em 0;
+  border-top: 2px solid currentcolor;
+}
+
+.formula-symbols {
+  display: grid;
+  gap: var(--sp-2);
+  max-width: 65ch;
+  margin: 0;
+  font-size: var(--fs-sm);
+
+  div {
+    display: grid;
+    grid-template-columns: 3.75rem minmax(0, 1fr);
+    gap: var(--sp-3);
+  }
+
+  dt {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  var {
+    font-style: normal;
+    font-weight: 700;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--ink-2);
+  }
+}
+
+// ---- The races counted, season by season -------------------------------------------------
+
+.method-seasons {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.method-seasons .method-subtitle {
+  margin-bottom: var(--sp-1);
+}
+
+.method-season {
+  --focus: var(--focus-on-tyvek);
+
+  background: var(--tyvek);
+  color: var(--ink);
+  border-radius: var(--r-bib);
+}
+
+// Closed, a season is its ruled line alone: no Tyvek around it.
+.method-season:not([open]) {
+  background: transparent;
+}
+
+// A closed season is a ruled line on the tarmac: a 1 px rule on top, no fill, the season in band
+// type, its count quieter, the "+" on the right. Only the open one is the sheet with its ink band
+// (decision D8, as the rider page's seasons).
+.method-season-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 48px;
+  padding: var(--sp-2) 0;
+  border-top: 1px solid var(--tarmac-rule);
+  color: var(--on-tarmac);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+  text-transform: uppercase;
+  cursor: pointer;
+  list-style: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &::after {
+    content: '+';
+    flex: none;
+    margin-left: auto;
+    font-size: var(--fs-lg);
+    line-height: 1;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-on-tarmac);
+    outline-offset: 2px;
+  }
+}
+
+// The season, then its count: on one line where they fit, the count under the season on a phone.
+.method-season-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--sp-3);
+  min-width: 0;
+}
+
+.method-season-count {
+  color: var(--on-tarmac-2);
+  font-weight: 700;
+}
+
+.method-season[open] > .method-season-summary {
+  padding-inline: var(--sp-4);
+  border-top: 0;
+  border-radius: var(--r-bib) var(--r-bib) 0 0;
+  background: var(--ink);
+  color: var(--tyvek);
+
+  .method-season-count {
+    color: var(--tyvek-shade);
+  }
+
+  &::after {
+    content: '\2212';
+  }
+}
+
+.method-season-body {
+  display: grid;
+  gap: var(--sp-5);
+  padding: var(--sp-4) var(--sp-4) var(--sp-5);
+}
+
+.method-group {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.method-group-title {
+  color: var(--ink-2);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-sm);
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.method-group-list {
+  columns: 16rem;
+  column-gap: var(--sp-6);
+  font-size: var(--fs-sm);
+
+  li {
+    padding: 2px 0;
+    break-inside: avoid;
+  }
+}
+
+// ---- Rules and sources: a term in band type, then its sentence ---------------------------
+
+.method-rules {
+  display: grid;
+  gap: var(--sp-4);
+  max-width: calc(65ch + 10rem);
+  margin: 0;
+}
+
+.method-rule {
+  display: grid;
+  gap: var(--sp-1);
+
+  dt {
+    color: var(--on-tarmac);
+    font-family: var(--font-bib);
+    font-stretch: var(--stretch-band);
+    font-weight: 800;
+    font-size: var(--fs-sm);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  dd {
+    max-width: 65ch;
+    margin: 0;
+  }
+}
+
+@media (min-width: 768px) {
+  .method-rule {
+    grid-template-columns: 10rem minmax(0, 1fr);
+    gap: var(--sp-4);
+    align-items: baseline;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .method-season:not([open]) > .method-season-summary:hover {
+    background: var(--tarmac-raised);
+  }
+
+  .method-toc a:hover {
+    text-decoration-thickness: 2px;
+  }
+}

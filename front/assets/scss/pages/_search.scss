@@ -1,0 +1,395 @@
+// Owned by the search (src/components/search, src/views/search): the rider search field and its
+// list, "Aller au rang", and the search page. Shared pieces live in components/_strip.scss and
+// components/_page.scss.
+
+// ---- The field: Tyvek on the road, its list hangs from it ------------------------------------
+
+.rider-search,
+.rank-jump {
+  min-width: 0;
+}
+
+.rider-search {
+  display: grid;
+  gap: 6px;
+  max-width: 34rem;
+}
+
+.rider-search-label,
+.rank-jump-label {
+  font-weight: 700;
+  font-size: var(--fs-sm);
+}
+
+.rider-search-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--sp-2);
+}
+
+// On a phone the list takes the whole row (field and button), so a name holds on one line; from
+// 600 px it hangs from the field alone.
+.rider-search-box {
+  min-width: 0;
+}
+
+@media (min-width: 600px) {
+  .rider-search-box {
+    position: relative;
+  }
+}
+
+.rider-search-input,
+.rank-jump-input {
+  --focus: var(--focus-on-tyvek);
+
+  width: 100%;
+  height: 48px;
+  padding: 0 var(--sp-3);
+  border: 0;
+  border-radius: var(--r-bib);
+  background: var(--tyvek);
+  color: var(--ink);
+  font-size: var(--fs-base);
+  box-shadow: 0 1px 0 rgb(0 0 0 / 35%);
+  appearance: none;
+
+  &::placeholder {
+    color: var(--ink-2);
+    opacity: 1;
+  }
+
+  &:focus-visible {
+    outline-offset: -3px;
+  }
+
+  // The browser's own clear button is drawn in its accent blue, a colour the index never uses:
+  // Escape clears the field.
+  &::-webkit-search-cancel-button {
+    appearance: none;
+  }
+}
+
+// The list is open: the field and the list are one sheet.
+.rider-search-input[aria-expanded='true'] {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  box-shadow: none;
+}
+
+.rider-search-list {
+  position: absolute;
+  z-index: 15;
+  top: 100%;
+  left: 0;
+  right: 0;
+  display: grid;
+  gap: 2px;
+  padding: var(--sp-1);
+  border: 1px solid var(--ink-line);
+  border-radius: 0 0 var(--r-bib) var(--r-bib);
+  background: var(--tyvek);
+  color: var(--ink);
+  box-shadow: 0 1px 0 rgb(0 0 0 / 35%);
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+// One rider of the list: a small strip. The rank is its bib numeral; no rank, no number.
+.search-option {
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr) auto;
+  min-height: 52px;
+  border-radius: var(--r-strip);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.search-option-rank {
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+  color: var(--tyvek);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-numeral);
+  font-weight: 900;
+  font-size: 1.375rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+
+  &[data-digits='4'],
+  &[data-digits='5'] {
+    font-size: 1rem;
+  }
+}
+
+.search-option-rank-none,
+.search-rank-none {
+  background: var(--tyvek-shade);
+}
+
+.search-option-who {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  min-width: 0;
+  padding: 6px 10px;
+}
+
+.search-option-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+
+  b {
+    font-weight: 800;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 2px;
+  }
+}
+
+.search-option-team {
+  overflow: hidden;
+  color: var(--ink-2);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.05em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.search-option-value {
+  align-self: center;
+  padding: 0 var(--sp-3) 0 var(--sp-1);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-md);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.search-option-status {
+  color: var(--ink-2);
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+// The active option is printed in reverse: ink sheet, Tyvek type, the numeral column in Tyvek.
+.search-option[aria-selected='true'] {
+  background: var(--ink);
+  color: var(--tyvek);
+
+  .search-option-rank {
+    background: var(--tyvek);
+    color: var(--ink);
+  }
+
+  .search-option-team,
+  .search-option-status {
+    color: var(--tyvek-shade);
+  }
+}
+
+// No match, or no answer: a sentence on the road under the field, never inside the list.
+.rider-search-message {
+  color: var(--on-tarmac-2);
+  font-size: var(--fs-sm);
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .search-option:not([aria-selected='true']):hover {
+    background: var(--tyvek-shade);
+  }
+}
+
+@media (forced-colors: active) {
+  .rider-search-input,
+  .rank-jump-input,
+  .rider-search-list {
+    border: 2px solid CanvasText;
+  }
+
+  .search-option[aria-selected='true'] {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+
+    .search-option-team,
+    .search-option-status {
+      color: HighlightText;
+    }
+  }
+}
+
+// ---- "Aller au rang": one line, the label beside its number --------------------------------
+
+.rank-jump {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+}
+
+.rank-jump-row {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.rank-jump-row .rank-jump-input {
+  width: 6.5rem;
+  font-variant-numeric: tabular-nums;
+  appearance: textfield;
+
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    margin: 0;
+    appearance: none;
+  }
+}
+
+// ---- The rail: the list and its tools side by side from 1024 px (decision D5) -----------------
+// Ranking and search page. From 1024 px the page's blocks end on the content column's right
+// edge: the list takes the column (minmax(0, 1fr)) and a 16rem rail beside it holds the search
+// (and, on the ranking, "Aller au rang" and the notes), held under the header while the list
+// scrolls. The rail comes first in the source, as the tools do on a phone; below 1024 px both
+// wrappers are display: contents, so a phone prints the page exactly as before.
+
+.list-columns,
+.list-rail {
+  display: contents;
+}
+
+@media (min-width: 1024px) {
+  .list-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 16rem;
+    align-items: start;
+    gap: var(--sp-7);
+  }
+
+  .list-columns > .list-column {
+    grid-row: 1;
+    grid-column: 1;
+    // The list ends on the rail, not on the phone's measure.
+    max-width: none;
+  }
+
+  .list-rail {
+    display: grid;
+    grid-row: 1;
+    grid-column: 2;
+    align-content: start;
+    gap: var(--sp-6);
+    min-width: 0;
+  }
+
+  // In 16rem the field takes the rail's width and its button goes under it; the list still hangs
+  // from the field (the field and the list are one sheet), over the button.
+  .list-rail .rider-search-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .list-rail .rider-search-submit {
+    justify-self: start;
+  }
+
+  // "Aller au rang" set like the search: its label over its row, the number to the rail's edge.
+  .list-rail .rank-jump {
+    display: grid;
+    gap: 6px;
+  }
+
+  .list-rail .rank-jump-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .list-rail .rank-jump-row .rank-jump-input {
+    width: 100%;
+  }
+}
+
+// Held under the header only where the whole rail fits under it: a rail taller than the window
+// would hide its last link behind the bottom edge while it sticks.
+@media (min-width: 1024px) and (min-height: 600px) {
+  .list-rail {
+    position: sticky;
+    top: calc(var(--header-h) + 1px + var(--sp-5));
+  }
+
+  // The open list never runs past the window's bottom edge while the rail sticks: it scrolls
+  // inside itself (the active option is kept in view by the script).
+  .list-rail .rider-search-list {
+    max-height: calc(100vh - var(--header-h) - 7.5rem);
+    overflow-y: auto;
+  }
+}
+
+// ---- The search page ---------------------------------------------------------------------------
+
+.search-page {
+  gap: var(--sp-5);
+}
+
+.search-results {
+  display: grid;
+  gap: var(--sp-4);
+  max-width: 48rem;
+}
+
+.search-count {
+  font-size: var(--fs-md);
+  font-weight: 700;
+}
+
+.search-message {
+  display: grid;
+  gap: var(--sp-2);
+  max-width: 62ch;
+  color: var(--on-tarmac-2);
+
+  .search-count {
+    color: var(--on-tarmac);
+  }
+
+  a {
+    color: var(--on-tarmac);
+    font-weight: 700;
+    text-underline-offset: 3px;
+  }
+}
+
+// A result strip: an unranked rider's index is printed under his status word, in secondary ink,
+// so it never reads as a ranked value.
+.search-value {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  line-height: 1.1;
+}
+
+.search-status {
+  color: var(--ink-2);
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.search-strip[data-ranked='false'] .search-index {
+  color: var(--ink-2);
+  font-size: var(--fs-md);
+}

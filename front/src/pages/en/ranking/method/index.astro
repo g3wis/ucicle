@@ -1,0 +1,10 @@
+---
+import MethodView from '../../../../views/method/MethodView.astro';
+import { loadMethod } from '../../../../views/method/load';
+import { cachePage } from '../../../../server/http';
+
+const data = await loadMethod('en');
+const notModified = data.version ? cachePage(Astro, data.version.etag) : null;
+if (notModified) return notModified;
+---
+<MethodView lang="en" data={data} />

@@ -1,0 +1,96 @@
+---
+/**
+ * Every page: the head (title, description, canonical, hreflang, Open Graph, structured data),
+ * the skip link, the shell's header and footer. The page itself provides <main id="main">.
+ * Head tags are rendered in the HTML: link previews and crawlers do not run JavaScript.
+ */
+import '../../assets/scss/app.scss';
+// The two faces of the first screen, preloaded so the H1 and the strips do not paint in the
+// fallback faces then shift. Same files as the @font-face rules of app.scss (same built URL).
+import archivoUrl from '@fontsource-variable/archivo/files/archivo-latin-wdth-normal.woff2?url';
+import atkinsonUrl from '@fontsource-variable/atkinson-hyperlegible-next/files/atkinson-hyperlegible-next-latin-wght-normal.woff2?url';
+import Header from '../components/shell/Header.astro';
+import Footer from '../components/shell/Footer.astro';
+import { common } from '../content/common';
+import { meta } from '../content/meta';
+import { absolute, type Alternates } from '../app/nav';
+import type { Lang, PageKey } from '../i18n/language';
+
+export interface Props {
+  lang: Lang;
+  page: PageKey;
+  title: string;
+  description: string;
+  /** This page's own path, for the canonical URL ("/classement/2/"). */
+  path: string;
+  /** Both language versions; null when the page has no twin (a 404). */
+  alternates: Alternates | null;
+  /** Provisional rider pages, search results: kept out of the index, links still followed. */
+  noindex?: boolean;
+  ogTitle?: string;
+  ogImage?: { path: string, width: number, height: number, alt: string };
+  /** schema.org graph nodes, serialised into one JSON-LD script. */
+  jsonLd?: Record<string, unknown>[];
+}
+
+const {
+  lang, page, title, description, path, alternates, noindex = false, ogTitle, ogImage, jsonLd,
+} = Astro.props;
+const c = common[lang];
+// The game's image for the game, the home and About; the index's for the index pages (decision D4).
+const GAME_PAGES: PageKey[] = ['game', 'home', 'about'];
+const image = ogImage ?? { ...(GAME_PAGES.includes(page) ? meta[lang].ogImage : meta[lang].ogIndexImage), width: 1200, height: 630 };
+const locale = lang === 'fr' ? 'fr_FR' : 'en_GB';
+const otherLocale = lang === 'fr' ? 'en_GB' : 'fr_FR';
+// Outside strings (UCI names, Wikidata labels, team names) go into the script element: escape '<'
+// so a '</script>' in a name cannot close it.
+const graph = jsonLd?.length
+  ? JSON.stringify({ '@context': 'https://schema.org', '@graph': jsonLd }).replace(/</g, '\\u003c')
+  : null;
+// A 404 (or a 500) declares no canonical URL: the requested path is not a page.
+const canonical = page !== 'notFound';
+---
+<!DOCTYPE html>
+<html lang={lang} data-page={page}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#2b2e33" />
+    <title>{title}</title>
+    <link rel="preload" as="font" type="font/woff2" href={archivoUrl} crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href={atkinsonUrl} crossorigin />
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex,follow" />}
+    {canonical && <link rel="canonical" href={absolute(path)} />}
+    {alternates && !noindex && (
+      <>
+        <link rel="alternate" hreflang="fr" href={absolute(alternates.fr)} />
+        <link rel="alternate" hreflang="en" href={absolute(alternates.en)} />
+        <link rel="alternate" hreflang="x-default" href={absolute(alternates.fr)} />
+      </>
+    )}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={c.siteName} />
+    <meta property="og:title" content={ogTitle ?? title} />
+    <meta property="og:description" content={description} />
+    {canonical && <meta property="og:url" content={absolute(path)} />}
+    <meta property="og:image" content={absolute(image.path)} />
+    <meta property="og:image:width" content={String(image.width)} />
+    <meta property="og:image:height" content={String(image.height)} />
+    <meta property="og:image:alt" content={image.alt} />
+    <meta property="og:locale" content={locale} />
+    {alternates && <meta property="og:locale:alternate" content={otherLocale} />}
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <slot name="head" />
+    {graph && <script type="application/ld+json" set:html={graph} />}
+  </head>
+  <body>
+    <a class="skip-link" href="#main">{page === 'game' ? c.skipLink.game : c.skipLink.content}</a>
+    <Header lang={lang} page={page} alternates={alternates} />
+    <slot />
+    <Footer lang={lang} page={page} alternates={alternates} />
+  </body>
+</html>

@@ -1,0 +1,15 @@
+---
+import RankingView from '../../views/ranking/RankingView.astro';
+import NotFoundView from '../../views/notFound/NotFoundView.astro';
+import { loadRanking } from '../../views/ranking/load';
+import { cachePage } from '../../server/http';
+
+const data = await loadRanking('fr', 1);
+if (data) {
+  const notModified = cachePage(Astro, data.version.etag);
+  if (notModified) return notModified;
+} else {
+  Astro.response.status = 404;
+}
+---
+{data ? <RankingView lang="fr" data={data} /> : <NotFoundView lang="fr" path={Astro.url.pathname} />}

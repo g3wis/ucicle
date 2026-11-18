@@ -54,3 +54,9 @@ yarn-error.log*
 
 # Local copies of /api/*.json for offline builds and captures (never deployed)
 /dev-fixtures
+
+# Astro
+/dist
+/.astro
+# Static snapshot for captures (scripts/snapshot.mjs)
+/snap

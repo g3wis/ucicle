@@ -1,0 +1,55 @@
+---
+/**
+ * The start list: the published ranking printed as Tyvek strips, one per rider. The rank is the
+ * strip's bib numeral (ink column on the left); the name links to the rider page, the team sits
+ * under it in band type; then the nation code and the index. Used by the home's top 10, the
+ * ranking pages and the rider page's neighbours. `highlight`: the rider of the page, marked and
+ * not linked (the page does not link to itself).
+ */
+import Delta from './Delta.astro';
+import { formatIndex, nationName } from '../../i18n/format';
+import { indexCommon } from '../../content/index-common';
+import { riderPath } from '../../app/nav';
+import type { Lang } from '../../i18n/language';
+import type { RankedRider } from '../../server/index-data';
+
+interface Props {
+  riders: RankedRider[];
+  lang: Lang;
+  /** Accessible name of the list ("Top 10 de l'index"). */
+  label: string;
+  /** Show the 7-day rank move column. */
+  moves?: boolean;
+  /** Give each strip the anchor id "rang-<n>" / "rank-<n>" (ranking pages only). */
+  anchors?: boolean;
+  highlight?: number;
+  /** Print each rider's team under his name (false when the list's heading names the team). */
+  team?: boolean;
+}
+const {
+  riders, lang, label, moves = false, anchors = false, highlight, team = true,
+} = Astro.props;
+const c = indexCommon[lang];
+const anchorPrefix = lang === 'fr' ? 'rang' : 'rank';
+---
+<ol class:list={['start-list', { 'start-list-moves': moves }]} aria-label={label}>
+  {riders.map((r) => (
+    <li
+      class:list={['strip', { 'strip-current': r.id === highlight }]}
+      id={anchors ? `${anchorPrefix}-${r.rank}` : undefined}
+    >
+      <span class="strip-rank" data-digits={String(r.rank).length}><span class="sr-only">{c.rank} </span>{r.rank}</span>
+      <span class="strip-who">
+        {r.id === highlight
+          ? <span class="strip-name" aria-current="page">{r.name}</span>
+          : <a class="strip-name" href={riderPath(lang, r.slug)}>{r.name}</a>}
+        {team && r.team && <span class="strip-team">{r.team}</span>}
+      </span>
+      {r.nationCode && (
+        <span class="strip-nation"><span aria-hidden="true">{r.nationCode}</span><span class="sr-only">{nationName(r.nationIso2, lang) ?? r.nationCode}</span></span>
+      )}
+      <span class="strip-index"><span class="sr-only">{c.index} </span>{formatIndex(r.index, lang)}</span>
+      {moves && <span class="strip-move"><Delta value={r.rankMove} kind="rank" lang={lang} /></span>}
+    </li>
+  ))}
+</ol>
