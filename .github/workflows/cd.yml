@@ -8,29 +8,20 @@ on:
     branches: [ "master" ]
 
 jobs:
-  # The website (front/, Astro SSR) and the Index data jobs (functions/) run on one Linux server with
-  # Docker Compose (deploy/README.md): build both images, push them to ghcr.io, then pull them on the
-  # server over SSH. The SSH step is skipped until its secrets are set.
-  deploy_server:
+  # The website (front/, Astro SSR) and the Index data jobs (functions/) run as the `ucicle` stack of
+  # g3wis/infra (stacks/ucicle/), behind its Traefik: deploy/README.md. This job builds both images
+  # from one commit and pushes them to ghcr.io; `deploy_server` then asks g3wis/infra to pin that tag
+  # and redeploy the stack (contract: g3wis/infra stacks/_template/README.md).
+  build_server:
     runs-on: ubuntu-latest
-    # One deployment at a time; a newer push waits for the running one.
-    concurrency:
-      group: deploy-server
-      cancel-in-progress: false
     permissions:
       contents: read
       packages: write
-    env:
-      # Secrets cannot be read in `if:`; their presence is passed through the environment.
-      DEPLOY_CONFIGURED: ${{ secrets.DEPLOY_HOST != '' && secrets.DEPLOY_USER != '' && secrets.DEPLOY_SSH_KEY != '' && secrets.DEPLOY_KNOWN_HOSTS != '' }}
     steps:
-    - uses: actions/checkout@v3
-    - name: Image names and Node versions
+    - uses: actions/checkout@v4
+    - name: Node versions
       id: meta
       run: |
-        owner="${GITHUB_REPOSITORY_OWNER,,}"
-        echo "web=ghcr.io/${owner}/ucicle-web" >> "$GITHUB_OUTPUT"
-        echo "jobs=ghcr.io/${owner}/ucicle-jobs" >> "$GITHUB_OUTPUT"
         echo "front_node=$(tr -d '[:space:]v' < front/.nvmrc)" >> "$GITHUB_OUTPUT"
         echo "functions_node=$(tr -d '[:space:]v' < functions/.nvmrc)" >> "$GITHUB_OUTPUT"
     - uses: docker/setup-buildx-action@v3
@@ -40,6 +31,15 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
+    # `sha-<7 characters>` is the tag deploy_server pins; `latest` only follows master.
+    - name: Image tags (web)
+      id: meta-web
+      uses: docker/metadata-action@v5
+      with:
+        images: ghcr.io/g3wis/ucicle/web
+        tags: |
+          type=sha,format=short
+          type=raw,value=latest
     - name: Build and push the web image
       uses: docker/build-push-action@v6
       with:
@@ -47,11 +47,18 @@ jobs:
         file: ./deploy/web.Dockerfile
         build-args: NODE_VERSION=${{ steps.meta.outputs.front_node }}
         push: true
-        tags: |
-          ${{ steps.meta.outputs.web }}:latest
-          ${{ steps.meta.outputs.web }}:sha-${{ github.sha }}
+        tags: ${{ steps.meta-web.outputs.tags }}
+        labels: ${{ steps.meta-web.outputs.labels }}
         cache-from: type=gha,scope=web
         cache-to: type=gha,scope=web,mode=max
+    - name: Image tags (jobs)
+      id: meta-jobs
+      uses: docker/metadata-action@v5
+      with:
+        images: ghcr.io/g3wis/ucicle/jobs
+        tags: |
+          type=sha,format=short
+          type=raw,value=latest
     - name: Build and push the jobs image
       uses: docker/build-push-action@v6
       with:
@@ -60,48 +67,37 @@ jobs:
         build-contexts: scheduler=./deploy/jobs
         build-args: NODE_VERSION=${{ steps.meta.outputs.functions_node }}
         push: true
-        tags: |
-          ${{ steps.meta.outputs.jobs }}:latest
-          ${{ steps.meta.outputs.jobs }}:sha-${{ github.sha }}
+        tags: ${{ steps.meta-jobs.outputs.tags }}
+        labels: ${{ steps.meta-jobs.outputs.labels }}
         cache-from: type=gha,scope=jobs
         cache-to: type=gha,scope=jobs,mode=max
-    - name: Server deployment skipped
-      if: env.DEPLOY_CONFIGURED != 'true'
-      run: echo "::notice title=Server not deployed::Images pushed. Set the secrets DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY and DEPLOY_KNOWN_HOSTS to deploy (deploy/README.md)."
-    - name: Deploy on the server
-      if: env.DEPLOY_CONFIGURED == 'true'
+
+  # Release: ask g3wis/infra to pin this commit's images and redeploy the ucicle stack. This
+  # repository never sees the vault password, the server's SSH key, or push access to g3wis/infra.
+  deploy_server:
+    needs: build_server
+    runs-on: ubuntu-latest
+    permissions: {}
+    # One release at a time; a newer push waits for the running one.
+    concurrency:
+      group: deploy-server
+      cancel-in-progress: false
+    steps:
+    - name: Dispatch deploy-stack on g3wis/infra
       env:
-        DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-        DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
-        DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-        DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-        DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
-        DEPLOY_DIR: ${{ vars.DEPLOY_DIR || '/srv/ucicle' }}
-        # Short-lived (this job only): lets the server pull the images, then it logs out.
-        GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Fine-grained PAT scoped to g3wis/infra only, permission Actions: write only.
+        GH_TOKEN: ${{ secrets.INFRA_DEPLOY_TOKEN }}
       run: |
-        install -m 700 -d ~/.ssh
-        printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
-        chmod 600 ~/.ssh/deploy_key
-        printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
-        # The script is expanded here and sent on stdin: the token never appears in a command line.
-        ssh -i ~/.ssh/deploy_key -p "${DEPLOY_PORT:-22}" -o BatchMode=yes -o StrictHostKeyChecking=yes \
-          "$DEPLOY_USER@$DEPLOY_HOST" sh -s <<EOF
-        set -eu
-        trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
-        cd '$DEPLOY_DIR'
-        git pull --ff-only --quiet
-        cd deploy
-        printf '%s' '$GHCR_TOKEN' | docker login ghcr.io -u '$GITHUB_ACTOR' --password-stdin
-        docker compose pull web jobs
-        docker compose up -d --remove-orphans
-        # A changed deploy/nginx/ucicle.conf is a bind mount: compose does not restart nginx for it.
-        if docker compose ps --status running --services | grep -qx nginx; then
-          docker compose exec -T nginx nginx -t && docker compose exec -T nginx nginx -s reload
+        set -euo pipefail
+        if [ -z "${GH_TOKEN:-}" ]; then
+          echo "::warning title=Server not deployed::Images pushed. Set the secret INFRA_DEPLOY_TOKEN to deploy the ucicle stack (deploy/README.md)."
+          exit 0
         fi
-        docker image prune -f --filter until=720h
-        docker compose ps
-        EOF
+        # Same tag docker/metadata-action publishes above (type=sha,format=short).
+        tag="sha-${GITHUB_SHA::7}"
+        gh workflow run deploy-stack.yml --repo g3wis/infra --ref main \
+          -f stack=ucicle -f "tag=$tag"
+        echo "dispatched deploy-stack for ucicle @ $tag"
 
   deploy_functions:
     runs-on: ubuntu-latest

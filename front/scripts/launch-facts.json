@@ -4,7 +4,7 @@
     {
       "id": "legal",
       "confirmed": false,
-      "what": "Legal mentions (LCEN): publisher identity, the host of the Linux server (name, address, phone), a contact. Add them to src/content/about.ts (privacy section)."
+      "what": "Legal mentions (LCEN): publisher identity, the host (IONOS, the VPS of g3wis/infra: name, address, phone), a contact. Add them to src/content/about.ts (privacy section)."
     },
     {
       "id": "stage-origin",
@@ -29,7 +29,7 @@
     {
       "id": "gzip-check",
       "confirmed": false,
-      "what": "After the first deploy on the Linux server (deploy/README.md): curl -sI --compressed https://www.ucicle.fr/ shows content-encoding: gzip, the home answers 200, and /sitemap-index.xml lists the rider sitemaps."
+      "what": "After the first deploy of the ucicle stack (deploy/README.md): curl -sI --compressed https://www.ucicle.fr/ shows content-encoding: gzip (Traefik compress), http://ucicle.fr/ ends on https://www.ucicle.fr/, the home answers 200, and /sitemap-index.xml lists the rider sitemaps."
     },
     {
       "id": "dataride-terms",
@@ -39,7 +39,7 @@
     {
       "id": "server",
       "confirmed": false,
-      "what": "The Linux server: its address, DNS for ucicle.fr and www.ucicle.fr, TLS certificates, and the GitHub secrets of the CD workflow (deploy/README.md). Then the first full collect backfill and rate."
+      "what": "The ucicle stack of g3wis/infra (deploy/README.md): its env.vault encrypted by the owner, the INFRA_DEPLOY_TOKEN secret here, the first full collect backfill and rate, then the DNS of ucicle.fr and www.ucicle.fr moved to the VPS."
     },
     {
       "id": "rider-duplicates",

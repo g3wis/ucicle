@@ -1,13 +1,15 @@
 #!/bin/sh
-# Schedule of the Index data jobs (container `jobs`, deploy/docker-compose.yml). No cron daemon: one
+# Schedule of the Index data jobs (service `jobs` of the ucicle stack, g3wis/infra stacks/ucicle). No
+# cron daemon: one
 # shell loop, so the jobs run as the container's user with the container's environment.
 #
-# 1. At start: `yarn migrate`. A failure stops the container, which Docker restarts.
+# 1. At start: `yarn migrate` (migrations, then the read-only role of the website when
+#    WEB_DATABASE_PASSWORD is set). A failure stops the container, which Docker restarts.
 # 2. Every day at NIGHTLY_AT (wall clock of TZ, Europe/Paris by default), in sequence:
 #      yarn collect --recent COLLECT_RECENT_DAYS
 #      yarn enrich:wikidata                     only on WEEKLY_DAY (1 = Monday ... 7 = Sunday)
 #      yarn rate                                run even if the collect failed (it rates what is stored)
-#    then, if `rate` succeeded, asks nginx to clear its proxy cache (deploy/nginx/50-ucicle-cache-purge.sh).
+#    The site reads the new index at once: its ETag is the index version, and no proxy keeps pages.
 #
 # The day of the last nightly run is kept in STATE_DIR (volume jobs_data). A run missed because the
 # container was down at NIGHTLY_AT is run when it comes back the same day; the first start on an empty
@@ -18,7 +20,6 @@ NIGHTLY_AT="${NIGHTLY_AT:-04:00}"
 WEEKLY_DAY="${WEEKLY_DAY:-7}"
 COLLECT_RECENT_DAYS="${COLLECT_RECENT_DAYS:-14}"
 STATE_DIR="${STATE_DIR:-/data/scheduler}"
-SIGNAL_FILE="${SIGNAL_FILE:-/var/run/ucicle-signal/purge-cache}"
 
 log() { echo "$(date '+%Y-%m-%d %H:%M:%S %Z') [scheduler] $*"; }
 
@@ -50,15 +51,7 @@ nightly() {
   if [ "$(date +%u)" = "$WEEKLY_DAY" ]; then
     job enrich:wikidata || log "enrich:wikidata failed"
   fi
-  if job rate; then
-    if : > "$SIGNAL_FILE" 2>/dev/null; then
-      log "proxy cache purge requested"
-    else
-      log "cannot write $SIGNAL_FILE: the proxy cache keeps its pages until they expire"
-    fi
-  else
-    log "rate failed: the site keeps serving the previous index"
-  fi
+  job rate || log "rate failed: the site keeps serving the previous index"
   log "nightly run of $1 done"
 }
 

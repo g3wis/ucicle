@@ -81,7 +81,7 @@ Cyclerly) lack one or the other (research synthesis, `.bunshin/research/synthesi
   UTC, not at local midnight).
 - Head tags (title, description, canonical, hreflang, Open Graph) must be in the static HTML:
   link previews do not run JavaScript.
-- The site is an Astro server (`dist/server/entry.mjs`) deployed with Docker Compose (deploy/README.md); `/api/*.json` are its own routes.
+- The site is an Astro server (`dist/server/entry.mjs`) deployed as the `ucicle` stack of g3wis/infra, behind Traefik (deploy/README.md); `/api/*.json` are its own routes.
 
 ## Brand commitments
 

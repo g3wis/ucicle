@@ -3,9 +3,10 @@ import type { AstroGlobal } from 'astro';
 /**
  * HTTP caching of the pages rendered from the database. No cookie is ever set on the site (a
  * shared cache stops caching for a visitor as soon as one exists). The data changes once a night,
- * so the browser keeps a page 5 minutes and the reverse proxy an hour, serving a stale copy while
- * it revalidates; the nightly job clears the proxy cache after each computation. The ETag is the
- * data version: an unchanged page answers 304.
+ * so the browser keeps a page 5 minutes. No shared cache sits in front of the server today (Traefik
+ * routes straight to it); `s-maxage` and `stale-while-revalidate` are for one placed there later,
+ * which would then need clearing after each nightly computation. The ETag is the data version: an
+ * unchanged page answers 304.
  */
 export const PAGE_CACHE = 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400';
 /** Pages that also show today's game (the home): the stage changes at 05:00 UTC. */

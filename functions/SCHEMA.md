@@ -6,7 +6,7 @@ writes the race, result and identity tables; the rating engine writes the four r
 
 - Migrations: plain SQL files in `functions/migrations/`, applied in order by `yarn migrate`, recorded in
   `schema_migrations (version, name, checksum, applied_at)`. Never edit an applied file: add `0002_...sql`.
-- No extension is used (production runs PostgreSQL 17 on the Linux server, deploy/docker-compose.yml).
+- No extension is used (production runs PostgreSQL 17 in the `ucicle` stack of g3wis/infra, see deploy/README.md).
 - Ids are `integer generated always as identity`. Days are `date` (no time zone); instants are `timestamptz`.
 - Source-agnostic: `competition`, `race`, `classification` and `result` carry `source` (`'dataride'` today) and
   `source_id` (the id in that source, as text), unique together. A later source (amateur results) adds rows with

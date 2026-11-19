@@ -38,10 +38,10 @@ COPY --from=build /app/build ./build
 # build/db/migrate.js reads ../../migrations/ (= /app/migrations).
 COPY migrations ./migrations
 COPY --from=scheduler scheduler.sh /usr/local/bin/ucicle-scheduler
-# /data (raw DataRide archive, schedule state) and the signal directory shared with nginx belong to
-# `node`, so that empty named volumes mounted there start owned by it.
+# /data (raw DataRide archive, schedule state) belongs to `node`, so that an empty volume mounted
+# there starts owned by it.
 RUN chmod 0755 /usr/local/bin/ucicle-scheduler \
- && mkdir -p /data/raw /data/scheduler /var/run/ucicle-signal \
- && chown -R node:node /data /var/run/ucicle-signal
+ && mkdir -p /data/raw /data/scheduler \
+ && chown -R node:node /data
 USER node
 CMD ["/usr/local/bin/ucicle-scheduler"]

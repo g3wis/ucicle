@@ -12,7 +12,7 @@
     "load:local": "node build/local.js",
     "migrate": "node build/cli/migrate.js",
     "collect": "node build/cli/collect.js",
-    "rate": "node --max-old-space-size=8192 build/cli/rate.js",
+    "rate": "node --max-old-space-size=2048 build/cli/rate.js",
     "calibrate": "node --max-old-space-size=8192 build/cli/calibrate.js",
     "check:rating": "node build/rating/check.js",
     "enrich:wikidata": "node build/cli/enrich.js",

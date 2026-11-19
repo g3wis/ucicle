@@ -172,7 +172,9 @@ node build/main.js
 ## Deployment
 
 The Astro server, PostgreSQL and the schedule of the index jobs (`yarn collect --recent 14`, then
-`yarn rate`, every night): [deploy/README.md](deploy/README.md).
+`yarn rate`, every night) run as the `ucicle` stack of the owner's infrastructure repository
+(`g3wis/infra`, `stacks/ucicle/`), behind its Traefik. On push to `master`, `deploy_server` builds
+the two images and asks that repository to deploy them: [deploy/README.md](deploy/README.md).
 
 The game function is deployed by the `deploy_functions` job of
 [cd.yml](.github/workflows/cd.yml) on push to `master` (`yarn cd` in `functions/`: sets the Scaleway

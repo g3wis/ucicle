@@ -57,8 +57,8 @@ export type AboutContent = {
 // OWNER: confirm https://github.com/g3wis/ucicle/issues may be shown as the place to report a data
 // error (public repository, issues open to players).
 
-// OWNER: legal mentions (publisher, host, contact) to supply; the site now runs on a Linux server
-// the owner provides, whose host is not named yet. When they exist, they go in
+// OWNER: legal mentions (publisher, host, contact) to supply; the site runs on the owner's IONOS
+// VPS (g3wis/infra, stack ucicle): the host to name is IONOS. When they exist, they go in
 // the privacy section (its title can become "Vie privée et mentions légales" /
 // "Privacy and legal notice"). Until then the page states only what is known.
 // OWNER: no audience measurement is known in the repository. Confirm there is none before adding
