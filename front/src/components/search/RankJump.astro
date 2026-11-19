@@ -1,0 +1,66 @@
+---
+/**
+ * "Aller au rang": a number in a GET form to the search page (name q), which answers a pure rank
+ * of the ranking with a 302 to its strip (`/classement/3/#rang-104`). With JavaScript, a rank of
+ * the ranking goes straight to its strip, and the focus lands on that rider's link.
+ */
+import { ranking } from '../../content/ranking';
+import { PAGES } from '../../app/nav';
+import { formatIndex } from '../../i18n/format';
+import type { Lang } from '../../i18n/language';
+
+interface Props {
+  lang: Lang;
+  /** Riders in the published ranking: the highest rank there is. */
+  count: number;
+  id: string;
+}
+const { lang, count, id } = Astro.props;
+const c = ranking[lang].rankJump;
+---
+<form class="rank-jump" action={PAGES.search[lang]} method="get" data-rank-jump data-lang={lang} data-count={String(count)}>
+  <label class="rank-jump-label" for={`${id}-n`}>{c.label}</label>
+  <div class="rank-jump-row">
+    <input
+      id={`${id}-n`}
+      class="rank-jump-input"
+      name="q"
+      type="number"
+      inputmode="numeric"
+      enterkeyhint="go"
+      min="1"
+      max={String(count)}
+      placeholder={c.range(formatIndex(count, lang))}
+      step="1"
+      autocomplete="off"
+      required
+    />
+    <button class="button button-secondary rank-jump-submit" type="submit">{c.submit}</button>
+  </div>
+</form>
+
+<script>
+  import { rankAnchor } from '../../app/nav';
+
+  document.querySelectorAll<HTMLFormElement>('form[data-rank-jump]').forEach((form) => {
+    const input = form.querySelector<HTMLInputElement>('input[name="q"]');
+    const lang = form.dataset.lang === 'en' ? 'en' : 'fr';
+    const count = Number(form.dataset.count ?? 0);
+    form.addEventListener('submit', (event) => {
+      const rank = Number(input?.value);
+      if (!Number.isInteger(rank) || rank < 1 || rank > count) return;
+      event.preventDefault();
+      const target = rankAnchor(lang, rank);
+      const [path, hash] = target.split('#');
+      if (path !== window.location.pathname) {
+        window.location.assign(target);
+        return;
+      }
+      // Same page: jump to the strip, then hand the focus to its rider link.
+      const strip = document.getElementById(hash);
+      if (window.location.hash === `#${hash}`) strip?.scrollIntoView();
+      else window.location.hash = hash;
+      strip?.querySelector<HTMLElement>('a')?.focus({ preventScroll: true });
+    });
+  });
+</script>

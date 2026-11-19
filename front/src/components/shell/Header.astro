@@ -1,0 +1,61 @@
+---
+/**
+ * The wordmark leads home; the navigation row (Jeu, Classement) is visible at every width now
+ * that two sections exist. On the game page only, Aide and Stats open the game's panels through
+ * the URL hash (#help, #stats), which the game island listens to. From 1024 px, À propos and the
+ * language ("EN" / "FR", quieter, behind a thin rule) join the row in the same band type; below,
+ * the footer carries them.
+ */
+import Icon from '../Icon';
+import { common } from '../../content/common';
+import {
+  otherLang, PAGES, showNavRow, visibleSections, type Alternates,
+} from '../../app/nav';
+import type { Lang, PageKey } from '../../i18n/language';
+
+interface Props { lang: Lang; page: PageKey; alternates: Alternates | null }
+const { lang, page, alternates } = Astro.props;
+const c = common[lang];
+const other = otherLang(lang);
+const otherPath = alternates ? alternates[other] : PAGES.home[other];
+const sectionOf: Partial<Record<PageKey, string>> = {
+  game: 'game', ranking: 'ranking', rider: 'ranking', method: 'ranking', search: 'ranking',
+};
+const current = sectionOf[page];
+const tools = page === 'game'
+  ? [{ key: 'help', label: c.header.help, icon: 'help' as const }, { key: 'stats', label: c.header.stats, icon: 'stats' as const }]
+  : [];
+---
+<header class="site-header">
+  <div class:list={['site-header-inner', { 'site-header-inner-tools': tools.length > 0 }]}>
+    <a class="wordmark" href={PAGES.home[lang]} aria-label={c.header.home} aria-current={page === 'home' ? 'page' : undefined}>{c.siteName}</a>
+    {showNavRow() && (
+      <nav class="site-nav" aria-label={c.header.nav}>
+        <ul>
+          {visibleSections().map((s) => (
+            <li>
+              <a
+                href={s.path[lang]}
+                aria-current={s.key === current ? (Astro.url.pathname === s.path[lang] ? 'page' : 'true') : undefined}
+              >{c.nav[s.key]}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    )}
+    <ul class="site-links">
+      <li><a href={PAGES.about[lang]} aria-current={page === 'about' ? 'page' : undefined}>{c.footer.about}</a></li>
+    </ul>
+    {tools.length > 0 && (
+      <div class="site-tools">
+        {tools.map((t) => (
+          <a class={`icon-button tool-${t.key}`} href={`#${t.key}`} data-panel-link={t.key} aria-haspopup="dialog" aria-expanded="false">
+            <Icon name={t.icon} />
+            <span class="tool-label">{t.label}</span>
+          </a>
+        ))}
+      </div>
+    )}
+    <a class="site-language" href={otherPath} hreflang={other} lang={other} aria-label={c.header.language.name}>{c.header.language.code}</a>
+  </div>
+</header>

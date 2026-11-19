@@ -1,0 +1,77 @@
+---
+/**
+ * "Rechercher un coureur": a GET form to the search page (name q) that works without JavaScript.
+ * The script below turns its field into a WAI-ARIA APG combobox with a listbox popup (the
+ * patterns of RiderCombobox): from 2 letters it asks /api/recherche and lists up to 8 riders
+ * (name, team in band type, index or status word); the arrows move through the list, Enter opens
+ * the chosen rider's page, Escape closes the list, the count is said in a polite live region.
+ * No match, or no answer: the list stays closed and the sentence is printed under the field.
+ * Enter with no rider chosen sends the form: the search page lists every match.
+ */
+import { indexCommon } from '../../content/index-common';
+import { search } from '../../content/search';
+import { PAGES } from '../../app/nav';
+import type { Lang } from '../../i18n/language';
+
+interface Props {
+  lang: Lang;
+  /** Prefix of the ids of this field: unique on the page. */
+  id: string;
+  /** The query already typed (the search page prints it back). */
+  value?: string;
+}
+const { lang, id, value = '' } = Astro.props;
+const ic = indexCommon[lang];
+const s = search[lang].field;
+const copy = {
+  instructions: s.instructions,
+  counts: Array.from({ length: 9 }, (_, n) => (n === 0 ? s.none : s.count(n))),
+  none: s.none,
+  failed: s.failed,
+  status: ic.status,
+  noIndex: search[lang].noIndex,
+  rank: ic.rank,
+  index: ic.index,
+};
+---
+<form
+  class="rider-search"
+  action={PAGES.search[lang]}
+  method="get"
+  role="search"
+  data-rider-search
+  data-lang={lang}
+  data-copy={JSON.stringify(copy)}
+>
+  <label class="rider-search-label" for={`${id}-q`}>{ic.search.label}</label>
+  <div class="rider-search-row">
+    <div class="rider-search-box">
+      <input
+        id={`${id}-q`}
+        class="rider-search-input"
+        name="q"
+        type="search"
+        value={value}
+        placeholder={ic.search.placeholder}
+        enterkeyhint="search"
+        autocomplete="off"
+        autocapitalize="words"
+        spellcheck="false"
+        minlength="2"
+        maxlength="120"
+        required
+      />
+      <ul id={`${id}-list`} class="rider-search-list" role="listbox" aria-label={ic.search.label} hidden></ul>
+    </div>
+    <button class="button button-secondary rider-search-submit" type="submit">{ic.search.submit}</button>
+  </div>
+  <p id={`${id}-message`} class="rider-search-message" data-message hidden></p>
+  <p id={`${id}-hint`} class="sr-only" data-hint></p>
+  <p class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-live></p>
+</form>
+
+<script>
+  import { enhanceRiderSearch } from './rider-search';
+
+  document.querySelectorAll<HTMLFormElement>('form[data-rider-search]').forEach(enhanceRiderSearch);
+</script>

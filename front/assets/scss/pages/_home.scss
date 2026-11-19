@@ -1,0 +1,510 @@
+// The home (src/views/home): the H1 and its computed line, today's stage as a compact mystery bib
+// on the road (the game's own bib classes, components/_bib.scss and _mystery.scss), the top 10
+// start list (components/_strip.scss), the latest results printed as Tyvek lines (rules only
+// between the values of a line), the method in a sentence, the rider search (pages/_search.scss).
+// Mobile first: at 390 x 664 the H1, the line, the game block and the start of the top 10 share
+// the first screen. From 1024 px the game block and the top 10 stand side by side, the game's own
+// grid, and the game block shows the mechanic (D3): the same compact bib, then the five try slots
+// of /jeu/ (pages/_game.scss, read-only), "Jouer" inside the first.
+
+.home-page {
+  gap: var(--sp-5);
+}
+
+// ---- H1 and the computed line ----------------------------------------------------------------
+
+.home-intro {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.home-line {
+  max-width: 62ch;
+  color: var(--on-tarmac-2);
+  font-variant-numeric: tabular-nums;
+}
+
+// ---- Today's stage and the top 10 ------------------------------------------------------------
+
+.home-lead {
+  display: grid;
+  gap: var(--sp-5);
+  align-items: start;
+}
+
+// The compact mystery bib beside its call to action: the bib's band and its "?" numeral.
+.home-game {
+  display: grid;
+  grid-template-columns: clamp(7rem, 38vw, 10rem) minmax(0, 1fr);
+  gap: var(--sp-4);
+  align-items: center;
+}
+
+// At 7 to 10 rem wide the band's text would run under the pins: the small bib wears none, at every
+// width.
+.home-game-bib {
+  display: flex;
+  flex-direction: column;
+}
+
+.home-game-band {
+  padding: var(--sp-2);
+  font-size: var(--fs-xs);
+  line-height: 1.25;
+}
+
+.home-game .home-game-mark {
+  padding: var(--sp-2) 0 var(--sp-3);
+  font-size: clamp(4.5rem, 2rem + 12vw, 6rem);
+  line-height: 0.88;
+}
+
+.home-game-text {
+  display: grid;
+  gap: var(--sp-2);
+  align-content: center;
+  min-width: 0;
+}
+
+.home-game-title {
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-lg);
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.home-game-note {
+  color: var(--on-tarmac-2);
+  font-size: var(--fs-sm);
+}
+
+// The primary call to action: the game's Tyvek button. Its label may take two lines on a narrow
+// phone rather than overflow the column.
+.home-play {
+  justify-self: stretch;
+  margin-top: var(--sp-1);
+  padding: var(--sp-2) var(--sp-3);
+  white-space: normal;
+  text-align: center;
+  text-decoration: none;
+}
+
+// The label that replaced "Jouer" once the stage is finished on this device: a fade, no movement.
+@media (prefers-reduced-motion: no-preference) {
+  .home-play[data-done] .home-play-label:not([hidden]) {
+    animation: home-fade var(--dur-base) var(--ease-out) both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-play[data-done] .home-play-label:not([hidden]) {
+    animation: home-fade 120ms linear both;
+  }
+}
+
+@keyframes home-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.home-top {
+  display: grid;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.home-head {
+  row-gap: 2px;
+}
+
+.home-note {
+  color: var(--on-tarmac-2);
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+// A link of the page that ends a section: a 44 px target, its text on the column's edge.
+.home-more {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  margin-left: calc(-1 * var(--sp-2));
+}
+
+.home-empty {
+  color: var(--on-tarmac-2);
+}
+
+// A tablet: the bib and its text side by side still, the button at its own width.
+@media (min-width: 600px) {
+  .home-play {
+    justify-self: start;
+    min-width: 12rem;
+    padding: 0 var(--sp-5);
+  }
+}
+
+// The try slots of /jeu/ (D3): printed from 1024 px only.
+.home-board {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .home-page {
+    gap: var(--sp-6);
+  }
+
+  // The game's own grid (DESIGN.md): the mystery bib on the left (400 px), the list on the right.
+  .home-lead {
+    grid-template-columns: 400px minmax(0, 1fr);
+    gap: var(--sp-7);
+  }
+
+  .home-lead-solo {
+    grid-template-columns: 400px;
+  }
+
+  // The compact bib and its title as below 1024 px, then the board of /jeu/ before the first try
+  // across the column: slot 1 outlined with "Essai 1 sur 5" and "Jouer", slots 2 to 4 dashed,
+  // slot 5 with its red numeral column. "Jouer" leaves the title's side for the first slot.
+  .home-game {
+    row-gap: var(--sp-5);
+  }
+
+  .home-game-text .home-play {
+    display: none;
+  }
+
+  .home-board {
+    display: grid;
+    grid-column: 1 / -1;
+  }
+
+  // The field of the game's first slot becomes the call to action: the Tyvek button at the
+  // field's full width and height (48 px).
+  .home-slot-play {
+    display: flex;
+    width: 100%;
+    margin-top: 0;
+  }
+}
+
+// Held in view beside the list when the window is tall enough to show the whole block.
+@media (min-width: 1024px) and (min-height: 640px) {
+  .home-game {
+    position: sticky;
+    top: calc(var(--header-h) + var(--sp-5));
+  }
+}
+
+// ---- Latest results: one Tyvek line per counted classification ---------------------------------
+
+.home-results {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.home-result-list {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+// The other races (decision E5): plain printed lines on the road under a small band, after the
+// major races' Tyvek lines. Date, race and class, winner.
+.home-others {
+  display: grid;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+}
+
+.home-others-title {
+  color: var(--on-tarmac-2);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-sm);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.home-other-list {
+  display: grid;
+}
+
+.home-other {
+  display: grid;
+  grid-template-columns: 3.25rem minmax(0, 1fr);
+  grid-template-areas:
+    'date race'
+    '. winner';
+  gap: 0 var(--sp-3);
+  padding: var(--sp-2) 0;
+  border-top: 1px solid var(--tarmac-rule);
+  color: var(--on-tarmac);
+  font-variant-numeric: tabular-nums;
+
+  .home-result-date,
+  .home-result-class {
+    color: var(--on-tarmac-2);
+  }
+
+  .home-result-rider {
+    color: var(--on-tarmac);
+    text-decoration-color: var(--tarmac-line);
+  }
+}
+
+.home-other-race {
+  grid-area: race;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.home-other-name {
+  overflow-wrap: anywhere;
+}
+
+.home-other-winner {
+  grid-area: winner;
+}
+
+@media (min-width: 768px) {
+  .home-other {
+    grid-template-columns: 4.5rem minmax(0, 1fr) minmax(0, 16rem);
+    grid-template-areas: 'date race winner';
+    align-items: center;
+  }
+}
+
+.home-result {
+  --focus: var(--focus-on-tyvek);
+
+  display: grid;
+  grid-template-columns: 3.25rem minmax(0, 1fr);
+  grid-template-areas:
+    'date race'
+    'values values';
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-strip);
+  background: var(--tyvek);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.home-result-date {
+  grid-area: date;
+  padding-top: 2px;
+  color: var(--ink-2);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+
+.home-result-race {
+  grid-area: race;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.home-result-name {
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.home-result-class {
+  color: var(--ink-2);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.05em;
+}
+
+// The printed line's values: the winner and the biggest change, a rule between them only.
+.home-result-values {
+  grid-area: values;
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  margin: 0;
+}
+
+.home-result-value {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  padding-right: var(--sp-3);
+
+  & + & {
+    padding-left: var(--sp-3);
+    padding-right: 0;
+    border-left: 1px solid var(--ink-line);
+  }
+
+  dt {
+    color: var(--ink-2);
+    font-size: var(--fs-2xs);
+    line-height: 1.2;
+  }
+
+  dd {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 var(--sp-2);
+    margin: 0;
+    min-height: 44px;
+  }
+}
+
+// A rider's name: the link fills the line's height (a 44 px target).
+.home-result-rider {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ink);
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: underline;
+  text-decoration-color: var(--ink-line);
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+
+.home-result-same {
+  color: var(--ink-2);
+}
+
+.home-result-delta {
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-md);
+}
+
+// Below 1024 px the delta always sits under the name, whatever the name's length.
+@media (max-width: 1023px) {
+  .home-result-value dd {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .home-result-rider:hover {
+    text-decoration-color: currentcolor;
+    text-decoration-thickness: 2px;
+  }
+}
+
+// On a wider phone or a tablet the values line up under the race, clear of the date column.
+@media (min-width: 600px) and (max-width: 1023px) {
+  .home-result {
+    grid-template-columns: 4rem minmax(0, 1fr);
+    grid-template-areas:
+      'date race'
+      '. values';
+  }
+
+  .home-result-values {
+    max-width: 32rem;
+  }
+}
+
+// From 1024 px a result is one printed line: date, race, then its two values, aligned from line
+// to line; the rules stand between the values.
+@media (min-width: 1024px) {
+  .home-result {
+    grid-template-columns: 4.5rem minmax(0, 1fr) minmax(0, 30rem);
+    grid-template-areas: 'date race values';
+    align-items: center;
+    gap: var(--sp-4);
+    padding: var(--sp-2) var(--sp-4);
+  }
+
+  .home-result-date {
+    padding-top: 0;
+  }
+
+  .home-result-values {
+    padding-left: var(--sp-4);
+    border-left: 1px solid var(--ink-line);
+  }
+
+  // Every delta stands right-aligned in one column; a long name wraps inside its own column.
+  .home-result-value dd {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: var(--sp-2);
+  }
+
+  .home-result-delta {
+    justify-self: end;
+  }
+}
+
+@media (max-width: 359px) {
+  .home-result {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'date'
+      'race'
+      'values';
+    gap: var(--sp-1);
+  }
+
+  .home-result-values {
+    grid-auto-flow: row;
+  }
+
+  .home-result-value + .home-result-value {
+    padding-left: 0;
+    border-left: 0;
+  }
+}
+
+// ---- The method and the search ----------------------------------------------------------------
+
+.home-end {
+  display: grid;
+  gap: var(--sp-6);
+  align-items: start;
+}
+
+.home-method {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.home-method-text {
+  max-width: 62ch;
+}
+
+@media (min-width: 768px) {
+  .home-end {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--sp-7);
+  }
+
+  .home-search {
+    margin-top: var(--sp-1);
+  }
+}
+
+@media (forced-colors: active) {
+  // The Tyvek lines lose their fill: a real border keeps each line an object.
+  .home-result {
+    border: 1px solid CanvasText;
+  }
+}

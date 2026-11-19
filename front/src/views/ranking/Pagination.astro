@@ -1,0 +1,76 @@
+---
+/**
+ * The ranking's pages as plain links (Google's pagination rules): previous, the first page, a
+ * window around the current one, the last page, next; a gap is an ellipsis. Two sequences are
+ * printed, and CSS shows one: from 380 px the window holds the pages either side of the current
+ * one; below, only the current one, so the row never scrolls sideways. The hidden one is
+ * display: none (out of the tab order and of the accessibility tree).
+ */
+import { ranking } from '../../content/ranking';
+import { rankingPagePath } from '../../app/nav';
+import type { Lang } from '../../i18n/language';
+
+interface Props {
+  lang: Lang;
+  page: number;
+  pages: number;
+  /** The accessible name of this navigation (unique on the page). */
+  label: string;
+}
+const { lang, page, pages, label } = Astro.props;
+const c = ranking[lang].pagination;
+
+type Item = { kind: 'page', n: number } | { kind: 'gap', key: string };
+
+/** 1, the window around `page`, the last page; an ellipsis for each gap. */
+function sequence(around: number): Item[] {
+  const wanted = new Set<number>([1, pages]);
+  for (let n = page - around; n <= page + around; n += 1) if (n >= 1 && n <= pages) wanted.add(n);
+  const sorted = [...wanted].sort((a, b) => a - b);
+  return sorted.flatMap((n, i): Item[] => (
+    i > 0 && n - sorted[i - 1] > 1 ? [{ kind: 'gap', key: `gap-${n}` }, { kind: 'page', n }] : [{ kind: 'page', n }]
+  ));
+}
+
+const variants = [
+  { name: 'wide', items: sequence(1) },
+  { name: 'narrow', items: sequence(0) },
+];
+---
+{pages > 1 && (
+  <nav class="pager" aria-label={label}>
+    {variants.map((v) => (
+      <ul class={`pager-list pager-${v.name}`}>
+        {page > 1 && (
+          <li class="pager-step pager-previous">
+            <a class="pager-link" href={rankingPagePath(lang, page - 1)} rel="prev">
+              <span aria-hidden="true">‹</span>
+              <span class="pager-step-text" aria-hidden="true">{c.previousShort}</span>
+              <span class="sr-only">{c.previous}</span>
+            </a>
+          </li>
+        )}
+        {v.items.map((item) => (item.kind === 'gap'
+          ? <li class="pager-gap" aria-hidden="true">…</li>
+          : (
+            <li>
+              <a
+                class="pager-link pager-page"
+                href={rankingPagePath(lang, item.n)}
+                aria-current={item.n === page ? 'page' : undefined}
+              ><span class="sr-only">{c.page} </span>{item.n}</a>
+            </li>
+          )))}
+        {page < pages && (
+          <li class="pager-step pager-next">
+            <a class="pager-link" href={rankingPagePath(lang, page + 1)} rel="next">
+              <span class="pager-step-text" aria-hidden="true">{c.nextShort}</span>
+              <span class="sr-only">{c.next}</span>
+              <span aria-hidden="true">›</span>
+            </a>
+          </li>
+        )}
+      </ul>
+    ))}
+  </nav>
+)}

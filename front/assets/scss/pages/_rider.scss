@@ -1,0 +1,820 @@
+// The rider page (src/views/rider): the index's signature surface. His bib, large, on the road.
+
+// ---- The bib -------------------------------------------------------------------------------
+
+.rider-hero {
+  display: grid;
+  gap: var(--sp-5);
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .rider-hero {
+    grid-template-columns: minmax(0, 560px) minmax(0, 1fr);
+    gap: var(--sp-7);
+  }
+}
+
+.rider-bib {
+  display: flex;
+  flex-direction: column;
+}
+
+.rider-bib-front {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-5) var(--sp-5) var(--sp-4);
+}
+
+// The rank is the bib's number.
+.rider-numeral {
+  flex: none;
+  font-size: clamp(5rem, 3.5rem + 7vw, 8rem);
+  line-height: 0.85;
+}
+
+// No rank: the status word stands in the numeral column, unboxed, in band type (an un-numbered
+// bib), never a fake number.
+.rider-numeral-status {
+  flex: none;
+  color: var(--ink);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: clamp(1.25rem, 1rem + 1.25vw, 1.75rem);
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.rider-who {
+  display: grid;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.rider-name {
+  font-size: clamp(1.5rem, 1.2rem + 1.5vw, 2rem);
+  font-weight: 800;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.rider-identity {
+  color: var(--ink-2);
+  font-size: var(--fs-sm);
+}
+
+// The printed line: four values, rules between them only (Allowed patterns). A label row and a
+// value row (subgrid): a label that wraps never lowers its value off the others' line. Browsers
+// without subgrid stack each cell's label and value as before.
+.rider-line {
+  display: grid;
+  grid-template-rows: auto auto;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  row-gap: 2px;
+  margin: 0 var(--sp-5) var(--sp-5);
+  border-top: 1px solid var(--ink-line);
+  border-bottom: 1px solid var(--ink-line);
+}
+
+.rider-line-cell {
+  display: grid;
+  grid-row: span 2;
+  grid-template-rows: subgrid;
+  row-gap: 2px;
+  align-content: start;
+  min-width: 0;
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-3);
+  border-left: 1px solid var(--ink-line);
+
+  &:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  dt {
+    color: var(--ink-2);
+    font-size: var(--fs-2xs);
+    line-height: 1.2;
+  }
+
+  dd {
+    margin: 0;
+    font-family: var(--font-bib);
+    font-stretch: var(--stretch-band);
+    font-weight: 800;
+    font-size: var(--fs-lg);
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.rider-line-sub {
+  display: block;
+  color: var(--ink-2);
+  font-family: var(--font-text);
+  font-stretch: 100%;
+  font-weight: 400;
+  font-size: var(--fs-2xs);
+}
+
+.rider-line-index dd {
+  font-size: clamp(1.375rem, 1.1rem + 1.2vw, 1.75rem);
+}
+
+.rider-bib-foot {
+  margin-top: auto;
+}
+
+// No team, no foot band: the two lower pins sit on Tyvek below the printed line's rule.
+.rider-bib-nofoot .rider-line {
+  margin-bottom: var(--sp-6);
+}
+
+.rider-team {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 420px) {
+  .rider-bib-front {
+    padding: var(--sp-5) var(--sp-4) var(--sp-3);
+    gap: var(--sp-3);
+  }
+
+  .rider-line {
+    margin: 0 var(--sp-4) var(--sp-4);
+  }
+
+  .rider-line-cell {
+    padding-left: var(--sp-2);
+  }
+}
+
+// The bib is posed once: a 12 px drop with a single overshoot (the game's pose). Reduced: a fade.
+@media (prefers-reduced-motion: no-preference) {
+  .rider-bib {
+    animation: rider-bib-pose 420ms var(--ease-out) both;
+  }
+
+  .history-lines {
+    animation: history-reveal 420ms var(--ease-out) 180ms both;
+  }
+
+  // The best mark appears as the line reaches it.
+  .history-best-dot,
+  .history-best-label,
+  .history-dot {
+    animation: rider-fade 140ms var(--ease-out) 560ms both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rider-bib {
+    animation: rider-fade 120ms linear both;
+  }
+}
+
+@keyframes rider-bib-pose {
+  0% { opacity: 0; transform: translateY(-12px); }
+  62% { opacity: 1; transform: translateY(2px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes rider-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes history-reveal {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+// ---- Beside the bib --------------------------------------------------------------------------
+
+.rider-aside {
+  display: grid;
+  gap: var(--sp-3);
+  align-content: start;
+  color: var(--on-tarmac-2);
+}
+
+.rider-status {
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--tarmac-line);
+  border-radius: var(--r-control);
+  color: var(--on-tarmac);
+}
+
+.rider-last {
+  display: grid;
+  gap: 2px;
+  color: var(--on-tarmac);
+}
+
+.rider-last-label {
+  color: var(--on-tarmac-2);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+// Standalone links start on the text's edge (the .home-more pattern): each 44 px target keeps
+// its padding inside the column and no longer overlaps its neighbour.
+.rider-links {
+  display: grid;
+  gap: 0;
+  justify-items: start;
+}
+
+.rider-links a,
+.profile-links a,
+.rider-game a {
+  display: inline-flex;
+  align-items: center;
+  margin-left: calc(-1 * var(--sp-2));
+}
+
+// ---- History ---------------------------------------------------------------------------------
+
+.rider-history,
+.rider-results,
+.rider-around,
+.rider-profile {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.history-chart {
+  margin: 0;
+}
+
+.history-panel {
+  position: relative;
+  height: 200px;
+  background: var(--tyvek);
+  border-radius: var(--r-bib);
+  color: var(--ink);
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .history-panel {
+    height: 260px;
+  }
+}
+
+.history-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.history-rule,
+.history-tick {
+  stroke: var(--ink-line);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.history-rule-dotted {
+  stroke-dasharray: 2 4;
+}
+
+.history-line {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.25;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.history-warm {
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+}
+
+.history-rule-label,
+.history-year,
+.history-warm-label {
+  position: absolute;
+  color: var(--ink-2);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+// Each rule value sits just above its rule, so the lowest never shares the year row.
+.history-rule-label {
+  right: var(--sp-2);
+  transform: translateY(calc(-100% - 3px));
+}
+
+.history-year {
+  bottom: 2px;
+  transform: translateX(-50%);
+}
+
+// The first label starts at the line's start instead of centring on it ("nov. 2020").
+.history-year-first {
+  transform: translateX(-4px);
+}
+
+// The line passes behind the word, never through it.
+.history-warm-label {
+  padding: 1px 2px;
+  background: var(--tyvek);
+  transform: translate(6px, calc(-100% - 8px));
+  text-transform: uppercase;
+}
+
+// A short history marks each race day.
+.history-dot {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ink);
+  transform: translate(-50%, -50%);
+}
+
+.history-best-dot {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--tyvek);
+  border-radius: 50%;
+  background: var(--ink);
+  transform: translate(-50%, -50%);
+}
+
+.history-best-label {
+  position: absolute;
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transform: translate(8px, calc(-100% - 6px));
+}
+
+.history-best-label-end {
+  transform: translate(calc(-100% - 8px), calc(-100% - 6px));
+}
+
+// The season table: the chart's accessible alternative, on the road. Its scroll box is a named,
+// focusable region (keyboard scrolling), with the site's focus ring.
+.table-scroll {
+  overflow-x: auto;
+
+  &:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+}
+
+.season-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+
+  th,
+  td {
+    padding: var(--sp-2) var(--sp-3) var(--sp-2) 0;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  thead th {
+    border-bottom: 2px solid var(--tarmac-line);
+    color: var(--on-tarmac-2);
+    font-family: var(--font-bib);
+    font-stretch: var(--stretch-band);
+    font-weight: 800;
+    font-size: var(--fs-2xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: normal;
+  }
+
+  tbody th {
+    font-family: var(--font-bib);
+    font-stretch: var(--stretch-band);
+    font-weight: 800;
+  }
+
+  .num {
+    text-align: right;
+  }
+
+  // Figures speak in the bib's numerals, never in the text face's slashed zero.
+  tbody .num {
+    font-family: var(--font-bib);
+    font-stretch: var(--stretch-band);
+    font-weight: 800;
+  }
+}
+
+.season-warm {
+  color: var(--on-tarmac-2);
+  font-family: var(--font-text);
+  font-stretch: 100%;
+  font-weight: 400;
+  font-size: var(--fs-xs);
+}
+
+// On a phone the five French columns fit 358 px: "(rodage)" goes under its year, cells lose 4 px.
+@media (max-width: 479px) {
+  .season-warm {
+    display: block;
+  }
+
+  .season-table th,
+  .season-table td {
+    padding-right: var(--sp-2);
+  }
+}
+
+// ---- Results ---------------------------------------------------------------------------------
+
+.section-note {
+  color: var(--on-tarmac-2);
+  font-size: var(--fs-sm);
+}
+
+.season-results {
+  background: var(--tyvek);
+  color: var(--ink);
+  border-radius: var(--r-bib);
+  --focus: var(--focus-on-tyvek);
+}
+
+// A closed band is its ink summary alone: no Tyvek fringe around its rounded corners.
+.season-results:not([open]) {
+  background: transparent;
+}
+
+// A closed season is a ruled line on the tarmac; only the open one is the pinned sheet with its
+// ink band (decision D8).
+.season-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 48px;
+  padding: var(--sp-2) 0;
+  border-top: 1px solid var(--tarmac-rule);
+  color: var(--on-tarmac);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  list-style: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &::after {
+    content: '+';
+    margin-left: auto;
+    font-size: var(--fs-lg);
+    line-height: 1;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-on-tarmac);
+    outline-offset: 2px;
+  }
+}
+
+.season-count {
+  color: var(--on-tarmac-2);
+  font-weight: 700;
+}
+
+.season-results[open] > .season-summary {
+  padding-inline: var(--sp-4);
+  border-top: 0;
+  border-radius: var(--r-bib) var(--r-bib) 0 0;
+  background: var(--ink);
+  color: var(--tyvek);
+
+  .season-count {
+    color: var(--tyvek-shade);
+  }
+
+  &::after {
+    content: '\2212';
+  }
+}
+
+.result-lines {
+  display: grid;
+  padding: var(--sp-2) 0;
+}
+
+// A stage race (decision E1): one heading, its name, class and dates, then its lines, which no
+// longer repeat the race. A thin rule separates it from the race above.
+.result-race-group {
+  padding-top: var(--sp-2);
+
+  & + .result-item,
+  .result-item + & {
+    border-top: 1px solid var(--tyvek-shade);
+  }
+}
+
+.result-race-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-1) var(--sp-3);
+  padding: var(--sp-2) var(--sp-4) 0;
+}
+
+.result-race-title {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.result-race-dates {
+  color: var(--ink-2);
+  font-size: var(--fs-sm);
+}
+
+.result-race-uci {
+  padding: 0 var(--sp-4);
+  color: var(--ink-2);
+  font-size: var(--fs-xs);
+}
+
+.result-race-lines {
+  padding: 0 0 var(--sp-1);
+
+  .result-race-name {
+    font-weight: 400;
+  }
+}
+
+// Date, race and class, place, delta, then the chevron's column (empty on a line not counted, so
+// the columns stay aligned).
+.result-line {
+  display: grid;
+  grid-template-columns: 3.5rem minmax(0, 1fr) auto 4.25rem 0.75rem;
+  align-items: baseline;
+  gap: var(--sp-1) var(--sp-3);
+  min-height: 44px;
+  padding: var(--sp-2) var(--sp-4);
+  font-variant-numeric: tabular-nums;
+}
+
+summary.result-line {
+  cursor: pointer;
+  list-style: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-on-tyvek);
+    outline-offset: -2px;
+  }
+
+  // The cue that a counted line opens its calculation: a small ink-2 chevron, down when closed,
+  // up when open (a state change, no transition). A chevron, not a "+": a plus printed after a
+  // signed figure would read as part of the number.
+  &::after {
+    content: '';
+    grid-column: 5;
+    align-self: center;
+    justify-self: end;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-right: 2px solid var(--ink-2);
+    border-bottom: 2px solid var(--ink-2);
+    transform: translateY(-2px) rotate(45deg);
+  }
+}
+
+.result-entry[open] > .result-line {
+  background: var(--tyvek-shade);
+}
+
+.result-entry[open] > summary.result-line::after {
+  transform: translateY(2px) rotate(-135deg);
+}
+
+.result-date {
+  color: var(--ink-2);
+  font-size: var(--fs-sm);
+}
+
+.result-race {
+  display: grid;
+  min-width: 0;
+}
+
+.result-race-name {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.result-class {
+  color: var(--ink-2);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.04em;
+}
+
+.result-place {
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.result-delta {
+  font-family: var(--font-bib);
+  text-align: right;
+}
+
+.result-line-off {
+  color: var(--ink-2);
+
+  .result-race-name {
+    font-weight: 400;
+  }
+}
+
+.result-off {
+  font-size: var(--fs-2xs);
+}
+
+.result-calc {
+  padding: 0 var(--sp-4) var(--sp-3) calc(3.5rem + var(--sp-4) + var(--sp-3));
+  background: var(--tyvek-shade);
+  color: var(--ink-2);
+  font-size: var(--fs-sm);
+}
+
+// The open season's older lines, behind one disclosure; once open, the list simply continues.
+.result-more-summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--sp-4);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  list-style: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-on-tyvek);
+    outline-offset: -2px;
+  }
+}
+
+.result-more[open] > .result-more-summary {
+  display: none;
+}
+
+.result-more > .result-lines {
+  padding-top: 0;
+}
+
+@media (max-width: 479px) {
+  .result-line {
+    grid-template-columns: 3.5rem minmax(0, 1fr) 3.75rem 0.75rem;
+  }
+
+  summary.result-line::after {
+    grid-column: 4;
+    grid-row: 1 / span 2;
+  }
+
+  .result-place {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .result-delta {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .result-calc {
+    padding-left: var(--sp-4);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  summary.result-line:hover {
+    background: var(--tyvek-shade);
+  }
+
+  .season-results:not([open]) > .season-summary:hover {
+    background: var(--tarmac-raised);
+  }
+}
+
+// ---- Around him, profile ---------------------------------------------------------------------
+
+// From 1024 px the column is filled: the chart beside its season table, the neighbours beside the
+// teammates; every block ends on the content column's edge (decision D5).
+.history-body,
+.around-body,
+.around-col {
+  display: grid;
+  gap: var(--sp-4);
+  align-content: start;
+}
+
+// A heading sits closer to its own list than to the group above it.
+.around-body {
+  gap: var(--sp-6);
+}
+
+.around-col {
+  gap: var(--sp-3);
+}
+
+@media (min-width: 1024px) {
+  .history-body {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: start;
+    gap: var(--sp-6);
+  }
+
+  .around-body {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sp-6);
+  }
+}
+
+.around-title {
+  color: var(--on-tarmac-2);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-sm);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.profile-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3) var(--sp-6);
+
+  dt {
+    color: var(--on-tarmac-2);
+    font-size: var(--fs-xs);
+  }
+
+  dd {
+    margin: 0;
+    font-family: var(--font-bib);
+    font-stretch: var(--stretch-band);
+    font-weight: 800;
+    font-size: var(--fs-md);
+  }
+}
+
+.profile-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-5);
+}
+
+.rider-game {
+  color: var(--on-tarmac-2);
+}

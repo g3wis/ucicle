@@ -1,0 +1,29 @@
+---
+/**
+ * A real 404 (the route sets the status): one sentence, the rider search (a GET form to the search
+ * page that works without JavaScript, the combobox once the script runs), and the way to the
+ * ranking and to the game.
+ */
+import Base from '../../layouts/Base.astro';
+import RiderSearch from '../../components/search/RiderSearch.astro';
+import { meta } from '../../content/meta';
+import { indexCommon } from '../../content/index-common';
+import { PAGES } from '../../app/nav';
+import type { Lang } from '../../i18n/language';
+
+interface Props { lang: Lang; path: string }
+const { lang, path } = Astro.props;
+const m = meta[lang].notFound;
+const c = indexCommon[lang];
+---
+<Base lang={lang} page="notFound" title={m.title} description={m.description} path={path} alternates={null} noindex>
+  <main id="main" class="not-found">
+    <h1 class="page-title">{c.notFound.title}</h1>
+    <p>{c.notFound.text}</p>
+    <RiderSearch lang={lang} id="nf" />
+    <ul class="not-found-links">
+      <li><a class="text-link" href={PAGES.ranking[lang]}>{c.notFound.ranking}</a></li>
+      <li><a class="text-link" href={PAGES.game[lang]}>{c.notFound.game}</a></li>
+    </ul>
+  </main>
+</Base>

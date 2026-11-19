@@ -1,0 +1,583 @@
+---
+/**
+ * The method page: how the index is calculated, every number read from the current version
+ * (direction contract "La liste des engagés"). On the tarmac: the text, kept to about 65
+ * characters a line, and the tables, ruled like the rider page's season table, their figures in
+ * the bib's numerals (decision D7). On Tyvek: the formula sheet and one real race with its first
+ * three finishers, whose change is recomputed in front of the reader. Every race counted is
+ * listed, season by season, in native <details>: a closed season is a ruled line, the open one
+ * the sheet (D8). The page index is one column, then a sticky rail from 1200 px (D5). No number
+ * is written in copy: the loader reads them, the view formats them.
+ */
+import Base from '../../layouts/Base.astro';
+import Delta from '../../components/index/Delta.astro';
+import { method as copy } from '../../content/method';
+import {
+  formatDay, formatDecimal, formatDelta, formatIndex, formatOrdinal,
+} from '../../i18n/format';
+import { LOCALES, type Lang } from '../../i18n/language';
+import { absolute, PAGES, riderPath } from '../../app/nav';
+import type { MethodData } from './load';
+
+interface Props { lang: Lang; data: MethodData }
+const { lang, data } = Astro.props;
+const c = copy[lang];
+const {
+  version, current, params, example, calibration, counters, drift,
+} = data;
+
+// ---- Number formats (every figure is the data's, only its print is chosen here) -------------
+const int = (n: number) => formatIndex(n, lang);
+const dec = (n: number, digits = 1) => formatDecimal(n, lang, digits);
+const num = (n: number) => (Number.isInteger(n) ? int(n) : dec(n, Math.round(n * 100) % 10 === 0 ? 1 : 2));
+/** A weight keeps one decimal at least: "1,0", "0,8", "0,35". */
+const weight = (w: number) => dec(w, Math.round(w * 100) % 10 === 0 ? 1 : 2);
+const pct = (x: number, digits = 0) => new Intl.NumberFormat(LOCALES[lang], {
+  style: 'percent', minimumFractionDigits: digits, maximumFractionDigits: digits,
+}).format(x);
+const odds = (x: number) => (Math.abs(x - Math.round(x)) < 0.05 ? int(x) : dec(x, 1));
+const day = (d: string | null) => (d ? formatDay(d, lang) : null);
+
+// ---- Head ----------------------------------------------------------------------------------
+const path = PAGES.method[lang];
+const alternates = { fr: PAGES.method.fr, en: PAGES.method.en };
+const firstSeason = data.seasons.length ? data.seasons[data.seasons.length - 1].season : null;
+const title = c.head.title;
+const description = c.head.description(counters ? int(counters.counted) : null, counters ? firstSeason : null);
+/** The date the page shows, and its dateModified: the day of the last full computation. */
+const shownDate = current?.computed ?? version?.asOf ?? null;
+
+const jsonLd = version ? [
+  {
+    '@type': 'Article',
+    '@id': `${absolute(path)}#article`,
+    headline: c.title,
+    name: title,
+    description,
+    url: absolute(path),
+    mainEntityOfPage: absolute(path),
+    inLanguage: lang,
+    ...(shownDate ? { dateModified: shownDate } : {}),
+    isPartOf: { '@id': absolute('/#website') },
+  },
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: c.breadcrumb.home, item: absolute(PAGES.home[lang]) },
+      { '@type': 'ListItem', position: 2, name: c.breadcrumb.ranking, item: absolute(PAGES.ranking[lang]) },
+      { '@type': 'ListItem', position: 3, name: c.breadcrumb.method, item: absolute(path) },
+    ],
+  },
+] : undefined;
+
+// ---- The weights the text needs --------------------------------------------------------------
+const typeWeight = (kind: string) => params?.typeWeights.find((t) => t.kind === kind)?.weight ?? null;
+const wOneDay = typeWeight('one_day');
+const wStage = typeWeight('stage');
+const wGrandTour = typeWeight('gc_final_grand_tour');
+const ratio = (w: number | null) => (w !== null && wOneDay ? weight(w / wOneDay) : null);
+const nOneDay = params?.topN.one_day ?? null;
+const nStage = params?.topN.stage ?? null;
+
+// The lower levels: entry index at CN and .2, K multiplier in .2 races (null without the correction)
+const lower = params?.lower ?? null;
+const kLower = lower && Math.abs(lower.kMultiplier - 1) > 1e-9 ? weight(lower.kMultiplier) : null;
+const kLowerWeight = (code: string) => (lower && kLower && lower.kClasses.includes(code) ? lower.kMultiplier : null);
+const lowerClassWeight = lower && kLower
+  ? params?.classWeights.find((w) => lower.kClasses.includes(w.code)) ?? null
+  : null;
+
+const plain = params ? c.plain.text({
+  initial: int(params.initialIndex),
+  nOneDay,
+  nGc: params.topN.gc_final ?? null,
+  nStage,
+  stage: ratio(wStage),
+  grandTour: ratio(wGrandTour),
+  entry: lower && lower.entryIndex !== params.initialIndex ? int(lower.entryIndex) : null,
+  kLower,
+}) : [];
+
+const gap200 = data.gaps.find((g) => g.gap === 200) ?? null;
+
+// The parameters printed as a figure and its words: the figure in the bib's numerals (decision D7).
+const figures = params ? {
+  minField: c.parameters.minField(int(params.minField)),
+  threshold: c.parameters.threshold(num(params.threshold), wOneDay !== null ? weight(wOneDay) : null),
+  activeDays: c.parameters.activeDays(int(params.activeDays)),
+} : null;
+
+// ---- The worked example ------------------------------------------------------------------------
+const first = example?.riders[0] ?? null;
+const exampleKLower = example ? kLowerWeight(example.classCode) : null;
+const kFormula = example && params && first
+  ? [
+    int(params.kBase), first.wClass !== null ? weight(first.wClass) : null, first.wType !== null ? weight(first.wType) : null,
+    exampleKLower !== null ? weight(exampleKLower) : null,
+  ].filter((s): s is string => s !== null).join(' × ')
+  : null;
+const exampleDuel = example?.duel && example.riders.length >= 2 ? c.example.duel({
+  a: example.riders[0].name,
+  aIndex: int(example.riders[0].before),
+  b: example.riders[1].name,
+  bIndex: int(example.riders[1].before),
+  expected: dec(example.duel.expected, 2),
+  gain: dec(1 - example.duel.expected, 2),
+}) : null;
+const isOne = (m: number) => Math.abs(m - 1) < 1e-9;
+
+// ---- Calibration, scope, rules, limits -----------------------------------------------------
+/** The calibration's seasons: a [from, to] pair reads as a range ("2020 à 2023"). */
+const seasonsText = (list: number[]) => {
+  if (list.length === 2) return c.accuracy.range(list[0], list[1]);
+  return list.length ? c.accuracy.join(list.map(String)) : null;
+};
+const seasonCols = data.seasons;
+const classTotal = (cls: string) => data.seasons.reduce((sum, s) => sum + (s.byClass[cls]?.classifications ?? 0), 0);
+const grandTotal = data.seasons.reduce((sum, s) => sum + s.classifications, 0);
+
+const rules = params ? c.rules.items({
+  threshold: num(params.threshold),
+  oneDay: wOneDay !== null ? weight(wOneDay) : null,
+  stage: wStage !== null ? weight(wStage) : null,
+  activeDays: int(params.activeDays),
+  returnBonus: params.returnBonus ? {
+    gapDays: int(params.returnBonus.gapDays),
+    multiplier: weight(params.returnBonus.minMultiplier),
+    experience: num(params.returnBonus.experience),
+  } : null,
+  minField: int(params.minField),
+  publishedFrom: day(params.publishedFrom),
+  lower: lower && kLower ? { initial: int(params.initialIndex), entry: int(lower.entryIndex), m: kLower } : null,
+}) : [];
+
+const limits = c.limits.items({
+  nextAfterTop: nOneDay ? formatOrdinal(nOneDay + 1, lang) : null,
+  stage: wStage !== null ? weight(wStage) : null,
+  nStage,
+  drift: drift ? {
+    from: dec(drift.from.mean, 1), fromDate: formatDay(drift.from.date, lang),
+    to: dec(drift.to.mean, 1), toDate: formatDay(drift.to.date, lang),
+  } : null,
+  lower: Boolean(lower),
+});
+const levels = calibration?.levels ? c.accuracy.levels({
+  gap: int(calibration.levels.gap),
+  gapBefore: int(calibration.levels.gapBefore),
+  two: calibration.levels.two ? pct(calibration.levels.two.accuracy, 1) : null,
+  twoBefore: calibration.levels.two ? pct(calibration.levels.two.before, 1) : null,
+  cn: calibration.levels.cn ? pct(calibration.levels.cn.accuracy, 1) : null,
+  cnBefore: calibration.levels.cn ? pct(calibration.levels.cn.before, 1) : null,
+}) : [];
+const skipped = counters && params ? c.scope.skipped({ ...counters.skipped, minField: int(params.minField), f: int }) : null;
+
+// ---- The page index: one link per section printed, its text the section's title ------------------
+const toc = [
+  { id: 'plain-title', title: c.plain.title, shown: true },
+  { id: 'gap-title', title: c.gap.title, shown: true },
+  { id: 'example-title', title: c.example.title, shown: Boolean(example && first) },
+  { id: 'formula-title', title: c.formula.title, shown: true },
+  { id: 'parameters-title', title: c.parameters.title, shown: true },
+  { id: 'scope-title', title: c.scope.title, shown: true },
+  { id: 'rules-title', title: c.rules.title, shown: true },
+  { id: 'uci-title', title: c.uci.title, shown: true },
+  { id: 'limits-title', title: c.limits.title, shown: true },
+  { id: 'versions-title', title: c.versions.title, shown: data.versions.length > 0 },
+  { id: 'sources-title', title: c.sources.title, shown: true },
+].filter((t) => t.shown);
+---
+<Base
+  lang={lang}
+  page="method"
+  title={title}
+  description={description}
+  path={path}
+  alternates={alternates}
+  jsonLd={jsonLd}
+>
+  <main id="main" class="index-page method-page">
+    <nav class="breadcrumb" aria-label={c.breadcrumb.label}>
+      <ol>
+        <li><a href={PAGES.home[lang]}>{c.breadcrumb.home}</a></li>
+        <li><a href={PAGES.ranking[lang]}>{c.breadcrumb.ranking}</a></li>
+        <li><span aria-current="page">{c.breadcrumb.method}</span></li>
+      </ol>
+    </nav>
+
+    <header class="method-head">
+      <h1 class="page-title">{c.title}</h1>
+      {current && <p class="method-version">{c.version(current.name, day(current.frozen))}</p>}
+      {version && <p class="page-lede">{c.computed(day(current?.computed ?? null), formatDay(version.asOf, lang))}</p>}
+    </header>
+
+    {(!version || !params) && <p class="method-text">{c.empty}</p>}
+
+    {version && params && figures && (
+      <div class="method-layout">
+        <nav class="method-toc" aria-label={c.toc.label}>
+          <ul>
+            {toc.map((t) => <li><a href={`#${t.id}`}>{t.title}</a></li>)}
+          </ul>
+        </nav>
+
+        <div class="method-body">
+          <section class="method-section" aria-labelledby="plain-title">
+            <h2 id="plain-title" class="section-title">{c.plain.title}</h2>
+            <div class="method-text">
+              {plain.map((p) => <p>{p}</p>)}
+            </div>
+          </section>
+
+          <section class="method-section" aria-labelledby="gap-title">
+            <h2 id="gap-title" class="section-title">{c.gap.title}</h2>
+            <p class="method-text">{c.gap.intro}</p>
+            <table class="method-table method-table-gap">
+              <caption class="sr-only">{c.gap.caption}</caption>
+              <thead>
+                <tr>
+                  <th scope="col">{c.gap.columns.gap}</th>
+                  <th scope="col" class="num">{c.gap.columns.share}</th>
+                  <th scope="col" class="num">{c.gap.columns.odds}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.gaps.map((g) => (
+                  <tr>
+                    <th scope="row" class="method-value">{c.gap.gap(int(g.gap))}</th>
+                    <td class="num">{pct(g.share)}</td>
+                    <td class="num">{c.gap.odds(odds(g.odds))}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {gap200 && <p class="method-text">{c.gap.beat(int(gap200.gap), dec(gap200.share, 2), dec(1 - gap200.share, 2))}</p>}
+
+            {calibration && (
+              <div class="method-accuracy">
+                <h3 class="method-subtitle">{c.accuracy.title}</h3>
+                <div class="method-text">
+                  <p>{c.accuracy.text({
+                    accuracy: pct(calibration.accuracy, 1),
+                    duels: calibration.duels !== null ? int(calibration.duels) : null,
+                    test: seasonsText(calibration.testSeasons),
+                    baseline: calibration.baseline !== null ? pct(calibration.baseline, 1) : null,
+                    undecided: calibration.undecided !== null ? pct(calibration.undecided, 1) : null,
+                  })}</p>
+                  {calibration.logLoss !== null && <p>{c.accuracy.logLoss(dec(calibration.logLoss, 3))}</p>}
+                  {calibration.trainSeasons.length > 0 && calibration.testSeasons.length > 0 && (
+                    <p>{c.accuracy.seasons(seasonsText(calibration.trainSeasons) ?? '', seasonsText(calibration.testSeasons) ?? '')}</p>
+                  )}
+                  {levels.map((p) => <p>{p}</p>)}
+                </div>
+              </div>
+            )}
+          </section>
+
+          {example && first && (
+            <section class="method-section" aria-labelledby="example-title">
+              <h2 id="example-title" class="section-title">{c.example.title}</h2>
+              <article class="method-sheet" aria-labelledby="example-race">
+                <p class="method-sheet-band" id="example-race">
+                  <span>{example.competition}, {formatDay(example.date, lang)}</span>
+                  <span class="method-sheet-class">{example.classCode}</span>
+                </p>
+                <div class="method-sheet-body">
+                  <div class="method-text method-sheet-text">
+                    <p>{c.example.intro({ finishers: int(example.finishers), top: example.top !== null && example.finishers > example.top ? example.top : null, duels: int(first.fieldSize - 1) })}</p>
+                    {kFormula && <p>{c.example.k(kFormula, num(first.k))}</p>}
+                    {exampleDuel && <p>{exampleDuel}</p>}
+                  </div>
+                  <ol class="example-riders" aria-label={c.example.listLabel}>
+                    {example.riders.map((r) => (
+                      <li class="example-rider">
+                        <h3 class="example-head">
+                          <span class="example-place">{formatOrdinal(r.rank, lang)}</span>
+                          <a class="example-name" href={riderPath(lang, r.slug)}>{r.name}</a>
+                          <Delta value={r.delta} kind="index" lang={lang} class="example-delta" />
+                        </h3>
+                        <dl class="example-line">
+                          <div class="example-cell"><dt>{c.example.line.before}</dt><dd>{dec(r.before)}</dd></div>
+                          <div class="example-cell"><dt>{c.example.line.counted}</dt><dd>{int(r.counted)}</dd></div>
+                          <div class="example-cell"><dt>{c.example.line.won}</dt><dd>{num(r.won)}</dd></div>
+                          <div class="example-cell"><dt>{c.example.line.expected}</dt><dd>{dec(r.expected, 2)}</dd></div>
+                        </dl>
+                        {!isOne(r.multiplier) && <p class="example-note">{c.example.multiplier(dec(r.multiplier, 2), r.boost)}</p>}
+                        <p class="example-calc">
+                          <span class="example-calc-term">Δ</span>{` = ${num(r.k)} × ${isOne(r.multiplier) ? '' : `${dec(r.multiplier, 2)} × `}(${num(r.won)} − ${dec(r.expected, 2)}) ÷ ${int(r.fieldSize - 1)} `}<span class="example-result">= <strong>{formatDelta(r.recomputed, lang)}</strong></span>
+                        </p>
+                        <p class="example-calc">
+                          <span class="example-calc-term">{c.example.after}</span>{` = ${dec(r.before)} ${r.recomputed < 0 ? '−' : '+'} ${dec(Math.abs(r.recomputed))} `}<span class="example-result">= <strong>{dec(r.after)}</strong></span>
+                        </p>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              </article>
+            </section>
+          )}
+
+          <section class="method-section" aria-labelledby="formula-title">
+            <h2 id="formula-title" class="section-title">{c.formula.title}</h2>
+            <p class="method-text">{c.formula.intro}</p>
+            <div class="method-sheet formula-sheet">
+              <div class="formula-lines">
+                <p class="formula">
+                  <span class="sr-only">{c.formula.spoken.e(int(params.scale))}</span>
+                  <span class="formula-math" aria-hidden="true"><var>E</var><sub>ij</sub> = <span class="frac"><span class="frac-num">1</span><span class="frac-den">1 + 10<sup>(<var>R</var><sub>j</sub> − <var>R</var><sub>i</sub>) / {int(params.scale)}</sup></span></span></span>
+                </p>
+                <p class="formula">
+                  <span class="sr-only">{c.formula.spoken.k(kLower)}</span>
+                  <span class="formula-math" aria-hidden="true"><var>K</var> = <var>K</var><sub>{c.formula.sub.base}</sub> × <var>w</var><sub>{c.formula.sub.cls}</sub> × <var>w</var><sub>{c.formula.sub.type}</sub>{kLower && <span class="formula-aside">{c.formula.kLower(kLower)}</span>}</span>
+                </p>
+                <p class="formula">
+                  <span class="sr-only">{c.formula.spoken.delta}</span>
+                  <span class="formula-math" aria-hidden="true">Δ<var>R</var><sub>i</sub> = <var>K</var> × <var>m</var><sub>i</sub> × <span class="frac"><span class="frac-num">Σ<sub>j</sub> (<var>S</var><sub>ij</sub> − <var>E</var><sub>ij</sub>)</span><span class="frac-den"><var>n</var> − 1</span></span></span>
+                </p>
+              </div>
+              <dl class="formula-symbols">
+                <div><dt><var>R</var><sub>i</sub>, <var>R</var><sub>j</sub></dt><dd>{c.formula.symbols.r}</dd></div>
+                <div><dt><var>E</var><sub>ij</sub></dt><dd>{c.formula.symbols.e}</dd></div>
+                <div><dt><var>S</var><sub>ij</sub></dt><dd>{c.formula.symbols.s}</dd></div>
+                <div><dt><var>n</var></dt><dd>{c.formula.symbols.n}</dd></div>
+                <div><dt>Σ<sub>j</sub></dt><dd>{c.formula.symbols.sum}</dd></div>
+                <div><dt><var>K</var></dt><dd>{c.formula.symbols.k(kLower)}</dd></div>
+                <div><dt><var>m</var><sub>i</sub></dt><dd>{c.formula.symbols.m}</dd></div>
+              </dl>
+            </div>
+            <h3 class="method-subtitle">{c.formula.properties.title}</h3>
+            <ul class="method-list">
+              {c.formula.properties.items.map((item) => <li>{item}</li>)}
+            </ul>
+          </section>
+
+          <section class="method-section" aria-labelledby="parameters-title">
+            <h2 id="parameters-title" class="section-title">{c.parameters.title}</h2>
+            <table class="method-table method-table-params">
+              <caption class="sr-only">{c.parameters.caption(current?.name ?? version.name)}</caption>
+              <thead>
+                <tr>
+                  <th scope="col">{c.parameters.columns.name}</th>
+                  <th scope="col">{c.parameters.columns.value}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">{c.parameters.rows.initial}</th><td class="method-value">{int(params.initialIndex)}</td></tr>
+                {lower && lower.entryIndex !== params.initialIndex && (
+                  <tr><th scope="row">{c.parameters.rows.lowerEntry}</th><td class="method-value">{int(lower.entryIndex)}</td></tr>
+                )}
+                <tr><th scope="row">{c.parameters.rows.scale}</th><td class="method-value">{int(params.scale)}</td></tr>
+                <tr><th scope="row">{c.parameters.rows.kBase}</th><td class="method-value">{num(params.kBase)}</td></tr>
+                {kLower && <tr><th scope="row">{c.parameters.rows.lowerK}</th><td class="method-value">{c.parameters.lowerK(kLower)}</td></tr>}
+                <tr><th scope="row">{c.parameters.rows.minField}</th><td><span class="method-figure">{figures.minField.figure}</span>{figures.minField.text && ` ${figures.minField.text}`}</td></tr>
+                <tr><th scope="row">{c.parameters.rows.threshold}</th><td><span class="method-figure">{figures.threshold.figure}</span>{figures.threshold.text && ` ${figures.threshold.text}`}</td></tr>
+                <tr><th scope="row">{c.parameters.rows.provisional}</th><td>{c.parameters.provisional(num(params.threshold))}</td></tr>
+                {params.returnBonus && (
+                  <tr>
+                    <th scope="row">{c.parameters.rows.returnBonus}</th>
+                    <td>{c.parameters.returnBonus(weight(params.returnBonus.minMultiplier), num(params.returnBonus.experience), int(params.returnBonus.gapDays))}</td>
+                  </tr>
+                )}
+                <tr><th scope="row">{c.parameters.rows.activeDays}</th><td><span class="method-figure">{figures.activeDays.figure}</span>{figures.activeDays.text && ` ${figures.activeDays.text}`}</td></tr>
+                {params.publishedFrom && (
+                  <tr><th scope="row">{c.parameters.rows.publishedFrom}</th><td>{formatDay(params.publishedFrom, lang)}</td></tr>
+                )}
+              </tbody>
+            </table>
+
+            <div class="method-weights">
+              <div class="method-weights-table">
+                <h3 class="method-subtitle" id="classes-title">{c.classes.title}</h3>
+                <table class="method-table">
+                  <caption class="sr-only">{c.classes.caption}</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">{c.classes.columns.code}</th>
+                      <th scope="col">{c.classes.columns.what}</th>
+                      <th scope="col" class="num">{c.classes.columns.weight}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {params.classWeights.map((w) => (
+                      <tr>
+                        <th scope="row" class="method-code">{w.code}</th>
+                        <td>{c.classes.names[w.code] ?? ''}</td>
+                        <td class="num method-value">{weight(w.weight)}{kLowerWeight(w.code) !== null && ` × ${kLower}`}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {lowerClassWeight && kLower && (
+                  <p class="method-note">{c.classes.lowerNote(kLower, weight(lowerClassWeight.weight * lower!.kMultiplier))}</p>
+                )}
+              </div>
+              <div class="method-weights-table">
+                <h3 class="method-subtitle" id="types-title">{c.types.title}</h3>
+                <table class="method-table">
+                  <caption class="sr-only">{c.types.caption}</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">{c.types.columns.kind}</th>
+                      <th scope="col" class="num">{c.types.columns.weight}</th>
+                      <th scope="col" class="num">{c.types.columns.top}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {params.typeWeights.map((t) => (
+                      <tr>
+                        <th scope="row">{c.types.names[t.kind] ?? t.kind}</th>
+                        <td class="num method-value">{weight(t.weight)}</td>
+                        <td class="num method-value">{t.top !== null ? int(t.top) : ''}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section class="method-section" aria-labelledby="scope-title">
+            <h2 id="scope-title" class="section-title">{c.scope.title}</h2>
+            <div class="method-text">
+              {c.scope.text(firstSeason).map((p) => <p>{p}</p>)}
+              {counters && <p>{c.scope.counters(int(counters.counted), int(counters.rows), int(counters.riders))}</p>}
+              {skipped && <p>{skipped}</p>}
+              <p>{c.scope.seasons}</p>
+            </div>
+
+            {data.classes.length > 0 && (
+              <div class="method-scroll" role="region" aria-labelledby="counted-caption" tabindex="0">
+                <table class="method-table method-table-counted">
+                  <caption id="counted-caption" class="method-caption">{c.scope.caption}</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">{c.scope.columns.cls}</th>
+                      {seasonCols.map((s) => (
+                        <th scope="col" class="num">{s.season}{s.warmUp && <span class="method-warm">{c.scope.warmUp}</span>}</th>
+                      ))}
+                      <th scope="col" class="num">{c.scope.columns.total}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.classes.map((cls) => (
+                      <tr>
+                        <th scope="row" class="method-code">{cls}</th>
+                        {seasonCols.map((s) => {
+                          const n = s.byClass[cls]?.classifications ?? 0;
+                          return <td class:list={['num', { 'method-zero': n === 0 }]}>{int(n)}</td>;
+                        })}
+                        <td class="num method-sum">{int(classTotal(cls))}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <th scope="row">{c.scope.total}</th>
+                      {seasonCols.map((s) => <td class="num method-sum">{int(s.classifications)}</td>)}
+                      <td class="num method-sum">{int(grandTotal)}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            )}
+
+            {data.seasons.length > 0 && (
+              <div class="method-seasons">
+                <h3 class="method-subtitle">{c.scope.listTitle}</h3>
+                {data.seasons.map((s) => {
+                  const line = c.scope.season(s.season, s.warmUp, int(s.classifications), int(s.competitions), s.competitions);
+                  return (
+                    <details class="method-season">
+                      <summary class="method-season-summary">
+                        <span class="method-season-line">
+                          <span class="method-season-title">{line.title}</span><span class="sr-only">, </span>
+                          <span class="method-season-count">{line.count}</span>
+                        </span>
+                      </summary>
+                      <div class="method-season-body">
+                        {s.lists.map((l) => (
+                          <div class="method-group">
+                            <h4 class="method-group-title"><span class="sr-only">{s.season}, </span>{c.scope.group(l.classCode, int(l.races.length), l.races.length)}</h4>
+                            <ul class="method-group-list">
+                              {l.races.map((r) => <li>{r.year !== null ? c.scope.edition(r.name, r.year) : r.name}</li>)}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
+          <section class="method-section" aria-labelledby="rules-title">
+            <h2 id="rules-title" class="section-title">{c.rules.title}</h2>
+            <dl class="method-rules">
+              {rules.map((r) => (
+                <div class="method-rule">
+                  <dt>{r.term}</dt>
+                  <dd>{r.text}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+
+          <section class="method-section" aria-labelledby="uci-title">
+            <h2 id="uci-title" class="section-title">{c.uci.title}</h2>
+            <p class="method-statement">{c.uci.text}</p>
+          </section>
+
+          <section class="method-section" aria-labelledby="limits-title">
+            <h2 id="limits-title" class="section-title">{c.limits.title}</h2>
+            <ul class="method-list">
+              {limits.map((item) => <li><strong class="method-lead">{item.lead}</strong>{' '}{item.text}</li>)}
+            </ul>
+          </section>
+
+          {data.versions.length > 0 && (
+            <section class="method-section" aria-labelledby="versions-title">
+              <h2 id="versions-title" class="section-title">{c.versions.title}</h2>
+              <table class="method-table method-table-versions">
+                <caption class="sr-only">{c.versions.caption}</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">{c.versions.columns.name}</th>
+                    <th scope="col">{c.versions.columns.frozen}</th>
+                    <th scope="col">{c.versions.columns.computed}</th>
+                    <th scope="col">{c.versions.columns.status}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.versions.map((v) => (
+                    <tr>
+                      <th scope="row" class="method-code">{v.name}</th>
+                      <td class="method-day">{day(v.frozen) ?? ''}</td>
+                      <td class="method-day">{day(v.computed) ?? ''}</td>
+                      <td>{v.current ? c.versions.current : c.versions.archived}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p class="method-text">{c.versions.note}</p>
+            </section>
+          )}
+
+          <section class="method-section" aria-labelledby="sources-title">
+            <h2 id="sources-title" class="section-title">{c.sources.title}</h2>
+            <dl class="method-rules">
+              {c.sources.items.map((s) => (
+                <div class="method-rule">
+                  <dt>{s.term}</dt>
+                  <dd><a class="method-link" href={s.href} rel="external">{s.link}</a>{s.after}</dd>
+                </div>
+              ))}
+            </dl>
+            {version.updatedAt && <p class="method-text">{c.sources.collected(formatDay(version.updatedAt, lang))}</p>}
+          </section>
+        </div>
+      </div>
+    )}
+
+    <p class="method-end"><a class="text-link" href={PAGES.ranking[lang]}>{c.rankingLink}</a></p>
+  </main>
+</Base>

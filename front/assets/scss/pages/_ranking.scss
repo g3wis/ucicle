@@ -1,0 +1,202 @@
+// Owned by the ranking page (src/views/ranking). Shared pieces live in components/_strip.scss and
+// components/_page.scss; the search field and "Aller au rang" in pages/_search.scss.
+
+.ranking-page {
+  gap: var(--sp-5);
+}
+
+.ranking-head {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.ranking-line {
+  max-width: 64ch;
+}
+
+.ranking-method,
+.ranking-note a {
+  color: var(--on-tarmac);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ranking-method:hover,
+  .ranking-note a:hover {
+    text-decoration-thickness: 2px;
+  }
+}
+
+.ranking-tools {
+  display: grid;
+  gap: var(--sp-4);
+  align-items: end;
+}
+
+@media (min-width: 768px) {
+  .ranking-tools {
+    grid-template-columns: minmax(0, 27rem) auto;
+    justify-content: start;
+    align-items: start;
+    gap: var(--sp-6);
+  }
+
+  // The search prints its sentence (no match, no answer) under its field: "Aller au rang" stays
+  // level with the field rather than with the form's foot. Its offset is the search label's line
+  // (--fs-sm at the body's 1.45) and the search form's 6 px gap.
+  .ranking-tools .rank-jump {
+    margin-top: calc(var(--fs-sm) * 1.45 + 6px);
+  }
+}
+
+.ranking-list {
+  display: grid;
+  gap: var(--sp-4);
+  // A start list is a printed column: the name and its index stay within one glance. From
+  // 1024 px the rail takes the rest of the column (pages/_search.scss, "The rail").
+  max-width: 48rem;
+}
+
+// The computed line and the note, as the rail prints them from 1024 px (the method linked once).
+.ranking-about {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  // The rail prints the computed line and the note: their phone copies stand down.
+  .ranking-head .ranking-line,
+  .ranking-list .ranking-note {
+    display: none;
+  }
+
+  .ranking-tools {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sp-5);
+  }
+
+  .ranking-tools .rank-jump {
+    margin-top: 0;
+  }
+
+  .ranking-about {
+    display: grid;
+    gap: var(--sp-2);
+    color: var(--on-tarmac-2);
+    font-size: var(--fs-sm);
+  }
+}
+
+.ranking-list-head {
+  align-items: center;
+  // The shared section head packs to the start; the pages of the list stay on the right.
+  justify-content: space-between;
+}
+
+.ranking-empty {
+  color: var(--on-tarmac-2);
+}
+
+.ranking-note {
+  max-width: 64ch;
+  color: var(--on-tarmac-2);
+  font-size: var(--fs-sm);
+}
+
+// "Aller au rang" lands on a strip: it is outlined on the road, like the rider of a page among
+// his neighbours.
+.ranking-page .strip:target {
+  outline: 2px solid var(--on-tarmac);
+  outline-offset: 2px;
+}
+
+// ---- Pagination: plain links, the current page printed on Tyvek -------------------------------
+
+.pager-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+}
+
+.pager-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1);
+  min-width: 44px;
+  height: 44px;
+  padding: 0 var(--sp-2);
+  border-radius: var(--r-strip);
+  color: var(--on-tarmac);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-md);
+  letter-spacing: 0.03em;
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+  text-transform: uppercase;
+
+  &[aria-current='page'] {
+    background: var(--tyvek);
+    color: var(--ink);
+  }
+}
+
+.pager-gap {
+  width: 14px;
+  color: var(--on-tarmac-2);
+  text-align: center;
+}
+
+.pager-step-text {
+  display: none;
+  font-size: var(--fs-sm);
+  letter-spacing: 0.05em;
+}
+
+// Two sequences are printed; one shows. Below 380 px only the current page sits between the
+// first and the last, so seven links never ask for more than the column.
+.pager-narrow {
+  display: none;
+}
+
+@media (max-width: 379px) {
+  .pager-wide {
+    display: none;
+  }
+
+  .pager-narrow {
+    display: flex;
+  }
+}
+
+@media (min-width: 600px) {
+  .pager-step-text {
+    display: inline;
+  }
+
+  .pager-step .pager-link {
+    padding: 0 var(--sp-3);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pager-link:not([aria-current='page']):hover {
+    background: var(--tarmac-hover);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pager-link {
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+}
+
+@media (forced-colors: active) {
+  .pager-link[aria-current='page'] {
+    border: 2px solid CanvasText;
+  }
+}

@@ -1,0 +1,8 @@
+---
+// Unmatched paths. The language follows the path.
+import NotFoundView from '../views/notFound/NotFoundView.astro';
+
+const lang = Astro.url.pathname.startsWith('/en/') ? 'en' : 'fr';
+Astro.response.status = 404;
+---
+<NotFoundView lang={lang} path={Astro.url.pathname} />
