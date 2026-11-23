@@ -37,7 +37,9 @@
 }
 
 .site-nav a {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   padding: var(--sp-2) var(--sp-3);
   font-family: var(--font-bib);
   font-stretch: var(--stretch-band);
@@ -47,13 +49,43 @@
   text-decoration: none;
   border-radius: var(--r-control);
 
-  &[aria-current='page'] {
+  &[aria-current='page'],
+  &[aria-current='true'] {
     background: var(--tarmac-raised);
   }
 }
 
+// Two sections and the game's two tools must fit a 360 px phone: tighter row below 480 px.
+@media (max-width: 479px) {
+  .site-header-inner {
+    gap: var(--sp-2);
+  }
+
+  .site-nav ul {
+    gap: 0;
+  }
+
+  .site-nav a {
+    padding: var(--sp-2);
+    font-size: var(--fs-sm);
+  }
+}
+
+// On the game page below 360 px the row (wordmark, two sections, Aide, Stats) does not fit: the
+// current section's own link goes (the wordmark still leads home, the other section stays).
+@media (max-width: 359px) {
+  .site-header-inner-tools .site-nav a[aria-current='page'] {
+    display: none;
+  }
+}
+
+// The game's tools are links to #help / #stats (the game island opens the panel).
+.site-tools a {
+  text-decoration: none;
+}
+
 // From 1024 px: À propos, the tools and the language in one type system (band type), the language
-// quieter and set apart by a rule. Below 1024 px they live in the Menu panel and in the footer.
+// quieter and set apart by a rule. Below 1024 px À propos and the language live in the footer.
 .site-links,
 .site-language {
   display: none;
@@ -106,10 +138,11 @@
     text-decoration: none;
   }
 
+  // "You are here" has one grammar in the row: the sections' raised marker.
   .site-links a[aria-current='page'] {
-    text-decoration: underline;
-    text-decoration-thickness: 3px;
-    text-underline-offset: 6px;
+    background: var(--tarmac-raised);
+    border-radius: var(--r-control);
+    text-decoration: none;
   }
 
   .site-tools {
@@ -130,10 +163,6 @@
     margin: 0;
     overflow: visible;
     clip: auto;
-  }
-
-  .tool-menu {
-    display: none;
   }
 
   // The language, "EN" / "FR": the same type, quieter, set apart from the tools by a 1 px rule
@@ -164,7 +193,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .wordmark:hover,
-  .site-links a:hover,
+  .site-links a:not([aria-current]):hover,
   .site-language:hover {
     text-decoration: underline;
     text-decoration-thickness: 3px;
@@ -173,5 +202,15 @@
 
   .site-language:hover {
     color: var(--on-tarmac);
+  }
+
+  .site-nav a:not([aria-current]):hover {
+    background: var(--tarmac-hover);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .site-nav a {
+    transition: background-color var(--dur-fast) var(--ease-out);
   }
 }

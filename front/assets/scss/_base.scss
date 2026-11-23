@@ -30,10 +30,14 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-#root {
-  min-height: 100vh;
+// The page column: header, the page's <main>, footer at the bottom of short pages.
+body {
   display: flex;
   flex-direction: column;
+}
+
+body > main {
+  flex: 1 0 auto;
 }
 
 h1,

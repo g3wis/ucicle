@@ -10,6 +10,12 @@
     "cd": "yarn && yarn build && node deploy.js",
     "build": "tsc -p tsconfig.json",
     "load:local": "node build/local.js",
+    "migrate": "node build/cli/migrate.js",
+    "collect": "node build/cli/collect.js",
+    "rate": "node --max-old-space-size=2048 build/cli/rate.js",
+    "calibrate": "node --max-old-space-size=8192 build/cli/calibrate.js",
+    "check:rating": "node build/rating/check.js",
+    "enrich:wikidata": "node build/cli/enrich.js",
     "lint": "eslint src",
     "fix:lint": "eslint src --fix",
     "watch:build": "tsc -p tsconfig.json -w",
@@ -22,7 +28,8 @@
     "@aws-sdk/client-s3": "^3.363.0",
     "axios": "^1.4.0",
     "dayjs": "^1.11.9",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "postgres": "4.1.1"
   },
   "devDependencies": {
     "@eslint-community/eslint-plugin-eslint-comments": "^4.8.1",

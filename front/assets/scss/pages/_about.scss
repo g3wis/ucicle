@@ -1,16 +1,20 @@
 // Owner: rules clone. Styles of the About page (/a-propos/, /en/about/): one reading column on
 // the tarmac, titles in the band type. The example bib lives in the Help panel only (D18).
 
+// The shell's column (the index pages' width and gutters): the reading column hangs from the same
+// left edge as every other page.
 .about {
   flex: 1;
   width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
   padding: var(--sp-6) var(--gutter-right) var(--sp-7) var(--gutter-left);
 }
 
 // About 70 characters a line at the body size.
 .about-column {
   max-width: 34rem;
-  margin: 0 auto;
+  margin: 0;
   font-size: var(--fs-md);
   line-height: 1.55;
 

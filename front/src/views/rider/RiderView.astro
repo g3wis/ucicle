@@ -1,0 +1,368 @@
+---
+/**
+ * The rider page, the index's signature surface (direction contract "La liste des engagés"):
+ * his bib, large, laid on the tarmac. The rank is the bib numeral; an unranked rider wears his
+ * status word in the numeral column, never a fake number. The printed line holds Index, last
+ * race, best index and nation; the ink foot band carries the team. Then the history, the
+ * results (each counted line opens its calculation), the riders around him, his profile.
+ */
+import Base from '../../layouts/Base.astro';
+import Pins from '../../components/Pin';
+import Delta from '../../components/index/Delta.astro';
+import StartList from '../../components/index/StartList.astro';
+import HistoryChart from './HistoryChart.astro';
+import ResultRace from './ResultRace.astro';
+import { resultText } from './rows';
+import { rider as copy } from '../../content/rider';
+import { indexCommon } from '../../content/index-common';
+import {
+  ageOn, formatDay, formatDayShort, formatDecimal, formatIndex, formatMonth, formatOrdinal, nationName, parseDay, teamText,
+} from '../../i18n/format';
+import {
+  absolute, PAGES, rankAnchor, riderPath,
+} from '../../app/nav';
+import type { Lang } from '../../i18n/language';
+import type { RiderData } from './load';
+
+interface Props { lang: Lang; data: RiderData }
+const { lang, data } = Astro.props;
+const c = copy[lang];
+const ic = indexCommon[lang];
+const {
+  rider, rating, rank, team, uci, profile, version,
+} = data;
+
+const asOf = formatDay(version.asOf, lang);
+const nation = nationName(rider.nationIso2, lang);
+const age = rider.birthDate ? ageOn(rider.birthDate, version.asOf) : null;
+const status = rating?.status ?? 'provisional';
+const rankText = rank ? formatOrdinal(rank, lang) : null;
+const rankTitle = rank ? (lang === 'fr' ? formatOrdinal(rank, lang) : String(rank)) : null;
+const lastCounted = data.results.find((r) => r.calc);
+const { raceName, placeText } = resultText(lang, data.kBase, data.topN);
+const lastText = lastCounted ? `${placeText(lastCounted)}, ${raceName(lastCounted)} (${lastCounted.date.slice(0, 4)})` : null;
+
+// Results by season, latest first; the current season open. A season's lines are grouped by race
+// (decision E1): the lines of one competition in a row are one race. A long open season shows its
+// 6 latest races, the rest behind one disclosure, so the riders around him stay within reach.
+const seasons = [...new Set(data.results.map((r) => r.season))].sort((a, b) => b - a);
+type Race = typeof data.results;
+const races = (rows: Race): Race[] => rows.reduce((groups: Race[], r) => {
+  const current = groups[groups.length - 1];
+  if (current && current[0].competitionId === r.competitionId) current.push(r);
+  else groups.push([r]);
+  return groups;
+}, []);
+const bySeason = seasons.map((s) => {
+  const rows = data.results.filter((r) => r.season === s);
+  return { season: s, rows, races: races(rows) };
+});
+// The open season shows whole races within a budget of about 15 lines (at least its 2 latest
+// races), the rest behind one disclosure.
+const LINE_BUDGET = 15;
+const linesOf = (list: Race[]) => list.reduce((n, race) => n + race.length, 0);
+const shown = (list: Race[]): number => {
+  let n = 0;
+  let lines = 0;
+  while (n < list.length && (n < 2 || lines + list[n].length <= LINE_BUDGET)) {
+    lines += list[n].length;
+    n += 1;
+  }
+  return n;
+};
+
+// The latest season beside the bib (decision E2): the season table's first row.
+const seasonRow = data.seasons[0] ?? null;
+// A rider absent for longer than the inactivity threshold wears his last race's date (decision E3).
+const activeDays = typeof version.parameters.active_days === 'number' ? version.parameters.active_days : 365;
+const absent = rating?.lastCounted
+  ? (parseDay(version.asOf).getTime() - parseDay(rating.lastCounted).getTime()) / 86_400_000 > activeDays
+  : false;
+const bandDate = absent && rating?.lastCounted ? formatDay(rating.lastCounted, lang) : asOf;
+// The profile prints only what exists: no titled empty block for a rider without Wikidata or UCI id.
+const hasFacts = Boolean(profile?.height || profile?.weight || uci?.uciId);
+const hasLinks = Boolean(uci?.pageId || profile?.qid || profile?.frwiki || profile?.enwiki);
+const minField = String(typeof version.parameters.min_field_size === 'number' ? version.parameters.min_field_size : 10);
+
+const title = c.title(rider.name, rankTitle);
+const description = c.description({
+  name: rider.name,
+  nation,
+  team: teamText(team),
+  age,
+  rank: rankText,
+  index: rating ? formatIndex(rating.index, lang) : '',
+  date: asOf,
+  results: data.countedSince2020,
+  wins: data.wins,
+  last: lastText,
+});
+const path = riderPath(lang, rider.slug);
+const alternates = { fr: riderPath('fr', rider.slug), en: riderPath('en', rider.slug) };
+const indexable = status !== 'provisional' && rating !== null;
+const bestLabel = rating?.best && rating.bestDate
+  ? c.history.bestMark(formatIndex(rating.best, lang), formatDay(rating.bestDate, lang))
+  : null;
+const chartLabel = data.history.length > 1
+  ? c.history.chartLabel(
+    rider.name,
+    formatDay(data.history[0].date, lang),
+    formatDay(data.history[data.history.length - 1].date, lang),
+    bestLabel ?? formatIndex(Math.max(...data.history.map((h) => h.index)), lang),
+  )
+  : '';
+
+const person: Record<string, unknown> = {
+  '@type': 'Person',
+  '@id': `${absolute(path)}#person`,
+  name: rider.name,
+  ...(rider.birthDate ? { birthDate: rider.birthDate } : {}),
+  ...(nation ? { nationality: { '@type': 'Country', name: nation } } : {}),
+  ...(team ? { memberOf: { '@type': 'SportsTeam', name: teamText(team), sport: 'Cycling' } } : {}),
+  ...(profile?.height ? { height: { '@type': 'QuantitativeValue', value: profile.height, unitCode: 'MTR' } } : {}),
+  ...(profile?.weight ? { weight: { '@type': 'QuantitativeValue', value: profile.weight, unitCode: 'KGM' } } : {}),
+  ...(uci?.uciId ? { identifier: { '@type': 'PropertyValue', propertyID: 'UCI ID', value: uci.uciId } } : {}),
+  sameAs: [
+    profile?.qid ? `https://www.wikidata.org/wiki/${profile.qid}` : null,
+    profile?.frwiki, profile?.enwiki,
+  ].filter(Boolean),
+};
+const jsonLd = [
+  {
+    '@type': 'WebPage',
+    '@id': absolute(path),
+    url: absolute(path),
+    name: title,
+    inLanguage: lang,
+    // The rider's latest index change: the day the sitemap gives as lastmod.
+    dateModified: rating?.lastCounted ?? version.asOf,
+    mainEntity: { '@id': `${absolute(path)}#person` },
+    isPartOf: { '@id': absolute('/#website') },
+  },
+  person,
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: c.breadcrumb.home, item: absolute(PAGES.home[lang]) },
+      { '@type': 'ListItem', position: 2, name: c.breadcrumb.ranking, item: absolute(PAGES.ranking[lang]) },
+      { '@type': 'ListItem', position: 3, name: rider.name, item: absolute(path) },
+    ],
+  },
+];
+---
+<Base
+  lang={lang}
+  page="rider"
+  title={title}
+  description={description}
+  path={path}
+  alternates={alternates}
+  noindex={!indexable}
+  jsonLd={indexable ? jsonLd : undefined}
+>
+  <main id="main" class="index-page rider-page">
+    <nav class="breadcrumb" aria-label={c.breadcrumb.label}>
+      <ol>
+        <li><a href={PAGES.home[lang]}>{c.breadcrumb.home}</a></li>
+        <li><a href={PAGES.ranking[lang]}>{c.breadcrumb.ranking}</a></li>
+        <li><span aria-current="page">{rider.name}</span></li>
+      </ol>
+    </nav>
+
+    <section class="rider-hero" aria-labelledby="rider-name">
+      <article class:list={['bib', 'rider-bib', { 'rider-bib-nofoot': !team }]} data-status={status}>
+        <Pins set="mystery" />
+        <p class="bib-band rider-bib-band">{c.bibBand(bandDate)}</p>
+        <div class="rider-bib-front">
+          {rank
+            ? <p class="rider-numeral bib-number"><span class="sr-only">{ic.rank} </span>{rank}</p>
+            : <p class="rider-numeral rider-numeral-status">{rating ? ic.status[status] : c.noIndex.word}</p>}
+          <div class="rider-who">
+            <h1 id="rider-name" class="rider-name">{rider.name}</h1>
+            <p class="rider-identity">
+              {c.identity(nation, age)}{rider.birthDate && <span class="rider-born">, {c.born(formatDay(rider.birthDate, lang))}</span>}
+            </p>
+          </div>
+        </div>
+        <dl class="rider-line">
+          {rating && (
+            <div class="rider-line-cell rider-line-index">
+              <dt>{c.line.index}</dt>
+              <dd>{formatIndex(rating.index, lang)}</dd>
+            </div>
+          )}
+          <div class="rider-line-cell">
+            <dt>{c.line.last}</dt>
+            <dd>
+              {lastCounted?.calc ? <Delta value={lastCounted.calc.delta} kind="index" lang={lang} /> : c.noLastRace}
+              {lastCounted?.calc && (
+                <span class="rider-line-sub">
+                  {absent ? formatDay(lastCounted.date, lang) : formatDayShort(lastCounted.date, lang)}
+                </span>
+              )}
+            </dd>
+          </div>
+          {rating?.best && (
+          <div class="rider-line-cell">
+            <dt>{c.line.best}</dt>
+            <dd>
+              {formatIndex(rating.best, lang)}
+              {rating?.bestDate && <span class="rider-line-sub">{formatMonth(rating.bestDate, lang)}</span>}
+            </dd>
+          </div>
+          )}
+          <div class="rider-line-cell">
+            <dt>{c.line.nation}</dt>
+            <dd><span aria-hidden="true">{rider.nationCode ?? ''}</span><span class="sr-only">{nation ?? rider.nationCode}</span></dd>
+          </div>
+        </dl>
+        {team && <p class="bib-foot rider-bib-foot"><span class="rider-team">{team}</span></p>}
+      </article>
+
+      <div class="rider-aside">
+        {!rating && <p class="rider-status">{c.noIndex.text(minField)}</p>}
+        {status === 'provisional' && rating && (
+          <p class="rider-status">{c.status.provisional(formatDecimal(rating.experience, lang, 1), String(data.threshold))}</p>
+        )}
+        {status === 'inactive' && rating?.lastCounted && (
+          <p class="rider-status">{c.status.inactive(formatDay(rating.lastCounted, lang))}</p>
+        )}
+        {seasonRow && seasonRow.counted > 0 && (
+          <p class="rider-last">
+            <span class="rider-last-label">{c.seasonLine.label(seasonRow.season)}</span>
+            <span>{c.seasonLine.text({
+              rank: seasonRow.rank ? formatOrdinal(seasonRow.rank, lang) : null,
+              wins: seasonRow.wins,
+              counted: seasonRow.counted,
+            })}</span>
+          </p>
+        )}
+        {uci && <p class="rider-uci">{c.uciRank(formatOrdinal(uci.rank, lang), formatDay(uci.date, lang))}</p>}
+        <ul class="rider-links">
+          {rank
+            ? <li><a class="text-link" href={rankAnchor(lang, rank)}>{c.rankLink(formatOrdinal(rank, lang))}</a></li>
+            : <li><a class="text-link" href={PAGES.ranking[lang]}>{c.rankingLink}</a></li>}
+          <li><a class="text-link" href={PAGES.method[lang]}>{c.methodLink}</a></li>
+        </ul>
+      </div>
+    </section>
+
+    {data.history.length > 1 && (
+      <section class="rider-history" aria-labelledby="history-title">
+        <h2 id="history-title" class="section-title">{c.history.title}</h2>
+        <div class="history-body">
+        <HistoryChart
+          points={data.history}
+          best={rating?.best && rating.bestDate ? { value: rating.best, date: rating.bestDate } : null}
+          lang={lang}
+          label={chartLabel}
+          warmUpLabel={c.history.warmUp}
+          bestLabel={bestLabel}
+        />
+        <div class="table-scroll" role="region" tabindex="0" aria-labelledby="seasons-caption">
+          <table class="season-table">
+            <caption id="seasons-caption" class="sr-only">{c.history.seasons}</caption>
+            <thead>
+              <tr>
+                <th scope="col">{c.history.columns.season}</th>
+                <th scope="col" class="num">{c.history.columns.index}</th>
+                <th scope="col" class="num">{c.history.columns.rank}</th>
+                <th scope="col" class="num">{c.history.columns.counted}</th>
+                <th scope="col" class="num">{c.history.columns.wins}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.seasons.map((s) => (
+                <tr>
+                  <th scope="row">{s.season}{s.season < 2020 && <span class="season-warm"> ({c.results.warmUp})</span>}</th>
+                  <td class="num">{s.index === null ? '' : formatIndex(s.index, lang)}</td>
+                  <td class="num">{s.rank ? formatOrdinal(s.rank, lang) : c.history.unranked}</td>
+                  <td class="num">{s.counted}</td>
+                  <td class="num">{s.wins}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        </div>
+      </section>
+    )}
+
+    <section class="rider-results" aria-labelledby="results-title">
+      <div class="section-head">
+        <h2 id="results-title" class="section-title">{c.results.title}</h2>
+        <p class="section-note">{c.results.scope}</p>
+      </div>
+      {bySeason.map((s, i) => (
+        <details class="season-results" open={i === 0}>
+          <summary class="season-summary">
+            <span class="season-title">{c.results.season(s.season, s.rows.length).title}</span><span class="sr-only">, </span>
+            <span class="season-count">{c.results.season(s.season, s.rows.length).count}</span>
+          </summary>
+          <ol class="result-lines">
+            {(i === 0 ? s.races.slice(0, shown(s.races)) : s.races).map((race) => (
+              <ResultRace rows={race} lang={lang} kBase={data.kBase} topN={data.topN} />
+            ))}
+          </ol>
+          {i === 0 && shown(s.races) < s.races.length && (
+            <details class="result-more">
+              <summary class="result-more-summary">{c.results.more(linesOf(s.races.slice(shown(s.races))), s.season)}</summary>
+              <ol class="result-lines">
+                {s.races.slice(shown(s.races)).map((race) => (
+                  <ResultRace rows={race} lang={lang} kBase={data.kBase} topN={data.topN} />
+                ))}
+              </ol>
+            </details>
+          )}
+        </details>
+      ))}
+    </section>
+
+    {(data.neighbours.length > 1 || data.teammates.length > 0) && (
+      <section class="rider-around" aria-labelledby="around-title">
+        <h2 id="around-title" class="section-title">{c.around.title}</h2>
+        <div class="around-body">
+          {data.neighbours.length > 1 && (
+            <div class="around-col">
+              <h3 class="around-title">{c.around.neighbours}</h3>
+              <StartList riders={data.neighbours} lang={lang} label={c.around.neighbours} highlight={rider.id} />
+            </div>
+          )}
+          {data.teammates.length > 0 && team && (
+            <div class="around-col">
+              <h3 class="around-title">{c.around.teammates(teamText(team) ?? team)}</h3>
+              <StartList riders={data.teammates} lang={lang} label={c.around.teammates(teamText(team) ?? team)} team={false} />
+            </div>
+          )}
+        </div>
+      </section>
+    )}
+
+    {(hasFacts || hasLinks) && (
+      <section class="rider-profile" aria-labelledby="profile-title">
+        <h2 id="profile-title" class="section-title">{c.profile.title}</h2>
+        {hasFacts && (
+          <dl class="profile-list">
+            {profile?.height && <div><dt>{c.profile.height}</dt><dd>{formatDecimal(profile.height, lang, 2)}&#160;m</dd></div>}
+            {profile?.weight && <div><dt>{c.profile.weight}</dt><dd>{Math.round(profile.weight)}&#160;kg</dd></div>}
+            {uci?.uciId && <div><dt>{c.profile.uciId}</dt><dd class="nums">{uci.uciId}</dd></div>}
+          </dl>
+        )}
+        {hasLinks && (
+          <ul class="profile-links" aria-label={c.profile.links}>
+            {uci?.pageId && <li><a class="text-link" href={`https://www.uci.org/rider-details/${uci.pageId}`} rel="external">{c.profile.uci}</a></li>}
+            {profile?.qid && <li><a class="text-link" href={`https://www.wikidata.org/wiki/${profile.qid}`} rel="external">{c.profile.wikidata}</a></li>}
+            {(lang === 'fr' ? profile?.frwiki : profile?.enwiki) && (
+              <li><a class="text-link" href={(lang === 'fr' ? profile?.frwiki : profile?.enwiki) as string} rel="external" hreflang={lang}>{lang === 'fr' ? c.profile.wikipediaFr : c.profile.wikipediaEn}</a></li>
+            )}
+            {(lang === 'fr' ? profile?.enwiki : profile?.frwiki) && (
+              <li><a class="text-link" href={(lang === 'fr' ? profile?.enwiki : profile?.frwiki) as string} rel="external" hreflang={lang === 'fr' ? 'en' : 'fr'}>{lang === 'fr' ? c.profile.wikipediaEn : c.profile.wikipediaFr}</a></li>
+            )}
+          </ul>
+        )}
+      </section>
+    )}
+
+    <p class="rider-game"><a class="text-link" href={PAGES.game[lang]}>{c.game}</a></p>
+  </main>
+</Base>

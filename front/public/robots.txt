@@ -1,3 +1,7 @@
 User-agent: *
 Allow: /
-Sitemap: https://www.ucicle.fr/sitemap.xml
+Disallow: /recherche/
+Disallow: /en/search/
+Disallow: /api/recherche
+Disallow: /api/fiche
+Sitemap: https://www.ucicle.fr/sitemap-index.xml

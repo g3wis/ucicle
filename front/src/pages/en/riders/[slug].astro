@@ -1,0 +1,20 @@
+---
+// A rider page. An old slug answers 301 to the current one (rider_slug_history); an unknown slug
+// is a real 404.
+import RiderView from '../../../views/rider/RiderView.astro';
+import NotFoundView from '../../../views/notFound/NotFoundView.astro';
+import { loadRider } from '../../../views/rider/load';
+import { cachePage } from '../../../server/http';
+import { riderPath } from '../../../app/nav';
+
+const result = await loadRider('en', Astro.params.slug ?? '');
+if (result?.kind === 'moved') return Astro.redirect(riderPath('en', result.slug), 301);
+const data = result?.kind === 'found' ? result.data : null;
+if (data) {
+  const notModified = cachePage(Astro, `${data.version.etag}-${data.rider.id}`);
+  if (notModified) return notModified;
+} else {
+  Astro.response.status = 404;
+}
+---
+{data ? <RiderView lang="en" data={data} /> : <NotFoundView lang="en" path={Astro.url.pathname} />}
