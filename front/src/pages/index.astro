@@ -1,0 +1,16 @@
+---
+import HomeView from '../views/home/HomeView.astro';
+import { loadHome } from '../views/home/load';
+import { cachePage, noStore, SHORT_CACHE } from '../server/http';
+
+const data = await loadHome('fr');
+// The home also shows today's game stage: its version is the index's and the game day's.
+// A home rendered while the database is down is never stored by a shared cache.
+if (data.unavailable) {
+  noStore(Astro);
+} else {
+  const notModified = cachePage(Astro, `${data.version?.etag ?? 'noindex'}-${data.game.date ?? 'nogame'}`, SHORT_CACHE);
+  if (notModified) return notModified;
+}
+---
+<HomeView lang="fr" data={data} />

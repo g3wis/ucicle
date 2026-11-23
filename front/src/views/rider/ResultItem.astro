@@ -1,0 +1,71 @@
+---
+/**
+ * One results line of the rider page. A counted line is a native <details>: its summary is the
+ * printed line (date, race and class, place, delta, the chevron), opening the calculation line.
+ * A line not counted (an abandon, a field too small) prints its status and "non compté".
+ * A day dated in the calendar year before its UCI season (mid-October to December) shows its year.
+ */
+import Delta from '../../components/index/Delta.astro';
+import { rider as copy } from '../../content/rider';
+import { formatDay, formatDayShort, formatDecimal } from '../../i18n/format';
+import type { Lang } from '../../i18n/language';
+import type { RiderResultRow } from './load';
+import { resultText } from './rows';
+
+interface Props {
+  row: RiderResultRow;
+  lang: Lang;
+  /** K before the weights (parameters.k_base). */
+  kBase: number | null;
+  /** The top N counted in a classification, by kind (parameters.top_n_by_kind). */
+  topN: Record<string, number>;
+  /** A line inside a race group: its stage or classification only; the group prints the race and class. */
+  short?: boolean;
+}
+const {
+  row: r, lang, kBase, topN, short = false,
+} = Astro.props;
+const c = copy[lang];
+const {
+  raceName, shortName, competition, placeText, kText, topOf, fmt1,
+} = resultText(lang, kBase, topN);
+const name = short ? shortName(r) : raceName(r);
+const renamed = competition(r) !== r.competition;
+const date = r.date.slice(0, 4) === String(r.season) ? formatDayShort(r.date, lang) : formatDay(r.date, lang);
+---
+<li class="result-item">
+  {r.calc ? (
+    <details class="result-entry">
+      <summary class="result-line">
+        <span class="result-date">{date}</span>
+        <span class="result-race">
+          <span class="result-race-name">{name}</span>
+          {!short && <span class="result-class">{r.classCode}{r.date < '2020-01-01' && `, ${c.results.warmUp}`}</span>}
+        </span>
+        <span class="result-place">{placeText(r)}</span>
+        <span class="result-delta"><Delta value={r.calc.delta} kind="index" lang={lang} /></span>
+      </summary>
+      <p class="result-calc">{c.results.calc({
+        before: fmt1(r.calc.before),
+        counted: r.calc.counted,
+        won: fmt1(r.calc.won),
+        expected: fmt1(r.calc.expected),
+        k: kText(r),
+        multiplier: Math.abs(r.calc.multiplier - 1) > 1e-9 ? formatDecimal(r.calc.multiplier, lang, 2) : null,
+        after: fmt1(r.calc.after),
+        top: topOf(r),
+      })}</p>
+      {renamed && !short && <p class="result-calc result-uci">{c.results.uciName(r.competition)}</p>}
+    </details>
+  ) : (
+    <div class="result-line result-line-off">
+      <span class="result-date">{date}</span>
+      <span class="result-race">
+        <span class="result-race-name">{name}</span>
+        {!short && <span class="result-class">{r.classCode}</span>}
+      </span>
+      <span class="result-place">{placeText(r)}</span>
+      <span class="result-delta result-off">{c.results.notCounted}</span>
+    </div>
+  )}
+</li>

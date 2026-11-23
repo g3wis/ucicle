@@ -1,0 +1,278 @@
+---
+/**
+ * The home, the site's SEO front door (synthesis section 1, "Accueil"), in the order of the
+ * direction contract's first viewport: the H1 that names the index and its one computed line;
+ * today's game stage as a compact mystery bib with the Play call to action; the top 10 printed as
+ * the start list; the latest counted results, one line per race; the method in one sentence; the
+ * rider search of the ranking. Nothing about today's mystery rider is read or printed: the page is
+ * indexed. From 1024 px the game block and the top 10 stand side by side (the game's own grid), and
+ * the game block shows the mechanic (decision D3): the same compact mystery bib, then the five try
+ * slots of /jeu/ in the game's own classes, the first one outlined and holding "Jouer". No clue,
+ * no attribute, no rider. Championships are named in the reader's language (D1, i18n/races.ts).
+ */
+import Base from '../../layouts/Base.astro';
+import Delta from '../../components/index/Delta.astro';
+import StartList from '../../components/index/StartList.astro';
+import RiderSearch from '../../components/search/RiderSearch.astro';
+import { home, homeBand } from '../../content/home';
+import { indexCommon } from '../../content/index-common';
+import { common } from '../../content/common';
+import { method } from '../../content/method';
+import {
+  formatBandDate, formatDay, formatDayShort, formatIndex,
+} from '../../i18n/format';
+import { competitionName } from '../../i18n/races';
+import { stageNumber } from '../../game/stage';
+import { MAX_TRIES } from '../../game/compare';
+import { absolute, PAGES, riderPath } from '../../app/nav';
+import type { Lang } from '../../i18n/language';
+import type { HomeData, HomeResult } from './load';
+
+interface Props { lang: Lang; data: HomeData }
+const { lang, data } = Astro.props;
+const c = home[lang];
+const ic = indexCommon[lang];
+const v = data.version;
+
+const asOf = v ? formatDay(v.asOf, lang) : null;
+const count = v ? formatIndex(data.classified, lang) : null;
+const updated = v?.updatedAt ? ic.updatedOn(formatDay(v.updatedAt, lang)) : null;
+const leader = data.top.find((r) => r.rank === 1)?.name ?? null;
+const description = c.description({
+  count: v && data.classified > 0 ? count : null,
+  since: data.since,
+  date: asOf,
+  leader,
+});
+
+// Today's stage, in the game's own band ("Étape 2, 17 nov."); without a day, a band without date.
+const gameDate = data.game.date;
+const band = gameDate ? homeBand[lang](stageNumber(gameDate), formatBandDate(gameDate, lang)) : c.game.bandless;
+
+// The rank-move column and its note are printed only when at least one rider of the top 10 moved
+// over the 7 days: a column of "=" says nothing and costs the names their width on a phone.
+const showMoves = data.top.some((r) => r.rankMove !== null && r.rankMove !== 0);
+const movesSince = showMoves && data.movesSince ? formatDay(data.movesSince, lang) : null;
+
+// A results line carries its year only when it is not the ranking's year.
+const asOfYear = v?.asOf.slice(0, 4);
+const dayText = (day: string): string => (day.slice(0, 4) === asOfYear ? formatDayShort(day, lang) : formatDay(day, lang));
+// The competition in the reader's language: a championship is named from its class (D1); the kind
+// suffix stays.
+const raceName = (r: HomeResult): string => {
+  const name = competitionName(lang, r.classCode, r.competition, r.country);
+  if (r.kind === 'stage') return `${name}, ${c.results.stage(r.stageNumber, r.stageLabel)}`;
+  const kind = c.results.kind[r.kind];
+  return kind ? `${name}, ${kind}` : name;
+};
+
+// From 1024 px, the board of /jeu/ as it stands before the first try (D3): slot 1 outlined, the
+// others dashed, the fifth with its red numeral column. Only the slots' numbers are printed.
+const tryLabel = common[lang].game.tryLabel(1, MAX_TRIES);
+const laterSlots = Array.from({ length: MAX_TRIES - 1 }, (_, k) => k + 2);
+
+const jsonLd = [{
+  '@type': 'WebSite',
+  '@id': absolute('/#website'),
+  name: common[lang].siteName,
+  url: absolute(PAGES.home.fr),
+  inLanguage: ['fr', 'en'],
+}];
+---
+<Base
+  lang={lang}
+  page="home"
+  title={c.title}
+  description={description}
+  path={PAGES.home[lang]}
+  alternates={PAGES.home}
+  jsonLd={jsonLd}
+>
+  <main id="main" class="index-page home-page">
+    <div class="home-intro">
+      <h1 class="page-title home-title">{c.h1}</h1>
+      <p class="index-lede">{method[lang].uci.text}</p>
+      <p class="home-line">{v && count ? c.line({ count, since: data.since, updated }) : (data.unavailable ? c.unavailableLine : c.emptyLine)}</p>
+    </div>
+
+    <div class:list={['home-lead', { 'home-lead-solo': data.top.length === 0 }]}>
+      <section
+        class="home-game"
+        aria-labelledby="home-game-title"
+        data-home-game
+        data-lang={lang}
+        data-game-date={gameDate ?? undefined}
+      >
+        <div class="bib home-game-bib">
+          <p class="bib-band home-game-band" data-game-band>{band}</p>
+          <p class="mystery-number home-game-mark" aria-hidden="true">?</p>
+        </div>
+        <div class="home-game-text">
+          <h2 id="home-game-title" class="home-game-title">{c.game.title}</h2>
+          <p class="home-game-note">{c.game.note(MAX_TRIES)}</p>
+          <a class="button button-primary home-play" href={PAGES.game[lang]} data-game-play>
+            <span class="home-play-label" data-play-label="play">{c.game.play}</span>
+            <span class="home-play-label" data-play-label="result" hidden>{c.game.result}</span>
+          </a>
+        </div>
+        <div class="board home-board">
+          <div class="bib-slot is-active">
+            <span class="bib-number" aria-hidden="true">1</span>
+            <div class="slot-body">
+              <p class="try-label">{tryLabel}</p>
+              <a class="button button-primary home-play home-slot-play" href={PAGES.game[lang]} data-game-play>
+                <span class="home-play-label" data-play-label="play">{c.game.play}</span>
+                <span class="home-play-label" data-play-label="result" hidden>{c.game.result}</span>
+              </a>
+            </div>
+          </div>
+          {laterSlots.map((n) => (
+            <div class:list={['bib-slot', { 'bib-red': n === MAX_TRIES }]} aria-hidden="true">
+              <span class="bib-number">{n}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {v && data.top.length > 0 && (
+        <section class="home-top" aria-labelledby="home-top-title">
+          <div class="section-head home-head">
+            <h2 id="home-top-title" class="section-title">{c.top.title(data.top.length)}</h2>
+            {asOf && <p class="home-note">{c.top.note(asOf, movesSince)}</p>}
+          </div>
+          <StartList riders={data.top} lang={lang} label={c.top.label(data.top.length)} moves={showMoves} />
+          <a class="text-link home-more" href={PAGES.ranking[lang]}>{c.top.more}</a>
+        </section>
+      )}
+    </div>
+
+    {v && data.top.length === 0 && <p class="home-empty">{c.top.empty}</p>}
+
+    {v && (
+      <section class="home-results" aria-labelledby="home-results-title">
+        <h2 id="home-results-title" class="section-title">{c.results.title}</h2>
+        {data.results.length > 0 ? (
+          <ol class="home-result-list" aria-label={c.results.label}>
+            {data.results.map((r) => (
+              <li class="home-result">
+                <time class="home-result-date" datetime={r.date}>{dayText(r.date)}</time>
+                <p class="home-result-race">
+                  <span class="home-result-name">{raceName(r)}</span>
+                  <span class="home-result-class">{r.classCode}</span>
+                </p>
+                <dl class="home-result-values">
+                  {r.winner && (
+                    <div class="home-result-value">
+                      <dt>{c.results.winner}</dt>
+                      <dd><a class="home-result-rider" href={riderPath(lang, r.winner.slug)}>{r.winner.name}</a></dd>
+                    </div>
+                  )}
+                  <div class="home-result-value">
+                    <dt>{c.results.mover}</dt>
+                    <dd>
+                      {r.winner && r.winner.id === r.mover.id
+                        ? <span class="home-result-same">{c.results.moverIsWinner}</span>
+                        : <a class="home-result-rider" href={riderPath(lang, r.mover.slug)}>{r.mover.name}</a>}
+                      <Delta value={r.mover.delta} kind="index" lang={lang} class="home-result-delta" />
+                    </dd>
+                  </div>
+                </dl>
+              </li>
+            ))}
+          </ol>
+        ) : <p class="home-empty">{c.results.empty}</p>}
+        {data.others.length > 0 && (
+          <div class="home-others">
+            <h3 class="home-others-title">{c.results.others}</h3>
+            <ol class="home-other-list" aria-label={c.results.othersLabel}>
+              {data.others.map((r) => (
+                <li class="home-other">
+                  <time class="home-result-date" datetime={r.date}>{dayText(r.date)}</time>
+                  <span class="home-other-race">
+                    <span class="home-other-name">{raceName(r)}</span>
+                    <span class="home-result-class">{r.classCode}</span>
+                  </span>
+                  {r.winner && (
+                    <span class="home-other-winner">
+                      <span class="sr-only">{c.results.winner} : </span>
+                      <a class="home-result-rider" href={riderPath(lang, r.winner.slug)}>{r.winner.name}</a>
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+      </section>
+    )}
+
+    <div class="home-end">
+      <section class="home-method" aria-labelledby="home-method-title">
+        <h2 id="home-method-title" class="section-title">{c.method.title}</h2>
+        <p class="home-method-text">{c.method.sentence(data.initialIndex !== null ? formatIndex(data.initialIndex, lang) : null, data.lowerEntryIndex !== null ? formatIndex(data.lowerEntryIndex, lang) : null)}</p>
+        <a class="text-link home-more" href={PAGES.method[lang]}>{c.method.link}</a>
+      </section>
+
+      <div class="home-search">
+        <RiderSearch lang={lang} id="home-search" />
+      </div>
+    </div>
+  </main>
+</Base>
+
+<script>
+  // Today's stage on this device: "Jouer" becomes "Voir mon résultat" (same link) once the day's
+  // stage is finished, read from the game's own storage. The rider is never read for display.
+  import { findResult } from '../../game/storage';
+  import { currentGameDate, stageNumber } from '../../game/stage';
+  import { formatBandDate } from '../../i18n/format';
+  import { homeBand } from '../../content/home';
+  import type { Lang } from '../../i18n/language';
+
+  const block = document.querySelector<HTMLElement>('[data-home-game]');
+  if (block) {
+    const lang: Lang = block.dataset.lang === 'en' ? 'en' : 'fr';
+    const rendered = block.dataset.gameDate ?? null;
+
+    const showResult = (date: string): void => {
+      let done = false;
+      try {
+        done = Boolean(findResult(date));
+      } catch {
+        done = false;
+      }
+      if (!done) return;
+      // Both "Jouer" links: beside the bib below 1024 px, in the first try slot from 1024 px.
+      block.querySelectorAll<HTMLElement>('[data-game-play]').forEach((link) => {
+        link.querySelectorAll<HTMLElement>('[data-play-label]').forEach((label) => {
+          label.hidden = label.dataset.playLabel !== 'result';
+        });
+        link.dataset.done = '';
+      });
+    };
+
+    const setBand = (date: string): void => {
+      const bandEl = block.querySelector<HTMLElement>('[data-game-band]');
+      if (bandEl) bandEl.textContent = homeBand[lang](stageNumber(date), formatBandDate(date, lang));
+      block.dataset.gameDate = date;
+    };
+
+    if (rendered && rendered >= currentGameDate()) {
+      showResult(rendered);
+    } else {
+      // A cached copy older than today's stage, or a day that could not be read when the page was
+      // rendered: ask the game's file for its day, and keep only the day.
+      fetch('/api/secret_rider.json', { cache: 'no-cache' })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((body: { date?: unknown } | null) => {
+          const fresh = body && typeof body.date === 'string' && /^\d{8}$/.test(body.date) ? body.date : null;
+          const date = fresh ?? rendered;
+          if (date && date !== rendered) setBand(date);
+          if (date) showResult(date);
+        })
+        .catch(() => {
+          if (rendered) showResult(rendered);
+        });
+    }
+  }
+</script>

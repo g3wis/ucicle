@@ -1,0 +1,24 @@
+---
+// A server error (the database or the server failed): the shell, one sentence and the way to the
+// game (prerendered, it still works) and home. Reads nothing from the database. The language
+// follows the path.
+import Base from '../layouts/Base.astro';
+import { meta } from '../content/meta';
+import { indexCommon } from '../content/index-common';
+import { PAGES } from '../app/nav';
+import type { Lang } from '../i18n/language';
+
+const lang: Lang = Astro.url.pathname.startsWith('/en/') ? 'en' : 'fr';
+const m = meta[lang].serverError;
+const c = indexCommon[lang].serverError;
+---
+<Base lang={lang} page="notFound" title={m.title} description={m.description} path={Astro.url.pathname} alternates={null} noindex>
+  <main id="main" class="not-found">
+    <h1 class="page-title">{c.title}</h1>
+    <p>{c.text}</p>
+    <ul class="not-found-links">
+      <li><a class="text-link" href={PAGES.game[lang]}>{c.game}</a></li>
+      <li><a class="text-link" href={PAGES.home[lang]}>{c.home}</a></li>
+    </ul>
+  </main>
+</Base>

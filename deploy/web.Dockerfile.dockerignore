@@ -1,0 +1,15 @@
+# Build context: front/ (deploy/web.Dockerfile)
+**/node_modules
+dist
+build
+ts-built
+snap
+.astro
+.bunshin
+.impeccable
+.cache
+coverage
+dev-fixtures
+.env*
+**/.DS_Store
+*.log

@@ -1,0 +1,49 @@
+---
+/**
+ * One race of a season's results (decision E1). A one-day race is one line. A stage race prints
+ * once: a heading with the race's name, its class and its date span, then its lines, final GC
+ * first, each named by its stage alone ("Étape 7"); every line keeps its calculation.
+ */
+import { rider as copy } from '../../content/rider';
+import { formatDay, formatDayShort } from '../../i18n/format';
+import type { Lang } from '../../i18n/language';
+import type { RiderResultRow } from './load';
+import ResultItem from './ResultItem.astro';
+import { resultText } from './rows';
+
+interface Props {
+  /** The race's lines, latest first, all of one competition. */
+  rows: RiderResultRow[];
+  lang: Lang;
+  kBase: number | null;
+  topN: Record<string, number>;
+}
+const {
+  rows, lang, kBase, topN,
+} = Astro.props;
+const c = copy[lang];
+const { competition } = resultText(lang, kBase, topN);
+const first = rows[0];
+const last = rows[rows.length - 1];
+const day = (d: string) => (d.slice(0, 4) === String(first.season) ? formatDayShort(d, lang) : formatDay(d, lang));
+// The race's own dates, not the span of this rider's lines (an abandon cuts those short).
+const from = first.raceStart ?? last.date;
+const to = first.raceEnd ?? first.date;
+const span = from === to ? day(from) : `${day(from)} – ${day(to)}`;
+const renamed = competition(first) !== first.competition;
+---
+{rows.length === 1 ? (
+  <ResultItem row={first} lang={lang} kBase={kBase} topN={topN} />
+) : (
+  <li class="result-race-group">
+    <p class="result-race-head">
+      <span class="result-race-title">{competition(first)}</span>
+      <span class="result-class">{first.classCode}{last.date < '2020-01-01' && `, ${c.results.warmUp}`}</span>
+      <span class="result-race-dates">{span}</span>
+    </p>
+    {renamed && <p class="result-race-uci">{c.results.uciName(first.competition)}</p>}
+    <ol class="result-lines result-race-lines">
+      {rows.map((r) => <ResultItem row={r} lang={lang} kBase={kBase} topN={topN} short />)}
+    </ol>
+  </li>
+)}

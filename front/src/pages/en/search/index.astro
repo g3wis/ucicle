@@ -1,0 +1,13 @@
+---
+// Search without JavaScript: the GET form of every search field lands here. Never cached by a
+// shared cache, kept out of the index (robots.txt blocks the path).
+import SearchView from '../../../views/search/SearchView.astro';
+import { loadSearch } from '../../../views/search/load';
+import { noStore } from '../../../server/http';
+
+noStore(Astro);
+const data = await loadSearch('en', Astro.url.searchParams.get('q') ?? '');
+// "Aller au rang": a rank typed in the search lands on its place in the ranking.
+if (data.redirect) return new Response(null, { status: 302, headers: { Location: data.redirect, 'Cache-Control': 'no-store' } });
+---
+<SearchView lang="en" data={data} />

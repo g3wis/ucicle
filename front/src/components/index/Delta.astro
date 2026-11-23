@@ -1,0 +1,26 @@
+---
+/**
+ * A change, told three ways and never by colour: an arrow (▲ ▼, or = when nothing moved), the
+ * signed figure, and a sentence for screen readers. `kind` "rank": places gained or lost (an
+ * integer, "▲ 2"); "index": the index change, one decimal ("+5,9").
+ */
+import { formatDelta } from '../../i18n/format';
+import { indexCommon } from '../../content/index-common';
+import type { Lang } from '../../i18n/language';
+
+interface Props { value: number | null; kind: 'rank' | 'index'; lang: Lang; class?: string }
+const { value, kind, lang, class: extra } = Astro.props;
+const c = indexCommon[lang];
+const rounded = value === null ? null : (kind === 'rank' ? Math.round(value) : Number(value.toFixed(1)));
+const sign = rounded === null || rounded === 0 ? 'flat' : (rounded > 0 ? 'up' : 'down');
+const arrow = { up: '▲', down: '▼', flat: '=' }[sign];
+const figure = rounded === null ? '' : (kind === 'rank' ? String(Math.abs(rounded)) : formatDelta(rounded, lang));
+const spoken = rounded === null ? '' : (kind === 'rank' ? c.rankMove(rounded) : c.indexMove(Math.abs(rounded) * (rounded < 0 ? -1 : 1)));
+---
+{rounded !== null && (
+  <span class:list={['delta', `delta-${kind}`, extra]} data-sign={sign}>
+    <span class="delta-arrow" aria-hidden="true">{arrow}</span>
+    {(kind === 'index' || rounded !== 0) && <span class="delta-figure" aria-hidden="true">{figure}</span>}
+    <span class="sr-only">{spoken}</span>
+  </span>
+)}

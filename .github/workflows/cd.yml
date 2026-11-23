@@ -8,28 +8,96 @@ on:
     branches: [ "master" ]
 
 jobs:
-  deploy_front:
+  # The website (front/, Astro SSR) and the Index data jobs (functions/) run as the `ucicle` stack of
+  # g3wis/infra (stacks/ucicle/), behind its Traefik: deploy/README.md. This job builds both images
+  # from one commit and pushes them to ghcr.io; `deploy_server` then asks g3wis/infra to pin that tag
+  # and redeploy the stack (contract: g3wis/infra stacks/_template/README.md).
+  build_server:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./front/
+    permissions:
+      contents: read
+      packages: write
     steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js from front/.nvmrc
-      uses: actions/setup-node@v3
-      with:
-        node-version-file: './front/.nvmrc'
-        cache: 'yarn'
-        cache-dependency-path: './front/yarn.lock'
-    - name: Run front cd script
+    - uses: actions/checkout@v4
+    - name: Node versions
+      id: meta
       run: |
-        yarn cd
-      env: 
-        ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
-        SECRET_KEY: ${{ secrets.SECRET_KEY }}
-        DOMAIN: ${{ vars.DOMAIN }}
-        REGION: ${{ vars.REGION }}
-        BUCKET_NAME: ${{ vars.BUCKET_NAME }}
+        echo "front_node=$(tr -d '[:space:]v' < front/.nvmrc)" >> "$GITHUB_OUTPUT"
+        echo "functions_node=$(tr -d '[:space:]v' < functions/.nvmrc)" >> "$GITHUB_OUTPUT"
+    - uses: docker/setup-buildx-action@v3
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    # `sha-<7 characters>` is the tag deploy_server pins; `latest` only follows master.
+    - name: Image tags (web)
+      id: meta-web
+      uses: docker/metadata-action@v5
+      with:
+        images: ghcr.io/g3wis/ucicle/web
+        tags: |
+          type=sha,format=short
+          type=raw,value=latest
+    - name: Build and push the web image
+      uses: docker/build-push-action@v6
+      with:
+        context: ./front
+        file: ./deploy/web.Dockerfile
+        build-args: NODE_VERSION=${{ steps.meta.outputs.front_node }}
+        push: true
+        tags: ${{ steps.meta-web.outputs.tags }}
+        labels: ${{ steps.meta-web.outputs.labels }}
+        cache-from: type=gha,scope=web
+        cache-to: type=gha,scope=web,mode=max
+    - name: Image tags (jobs)
+      id: meta-jobs
+      uses: docker/metadata-action@v5
+      with:
+        images: ghcr.io/g3wis/ucicle/jobs
+        tags: |
+          type=sha,format=short
+          type=raw,value=latest
+    - name: Build and push the jobs image
+      uses: docker/build-push-action@v6
+      with:
+        context: ./functions
+        file: ./deploy/jobs.Dockerfile
+        build-contexts: scheduler=./deploy/jobs
+        build-args: NODE_VERSION=${{ steps.meta.outputs.functions_node }}
+        push: true
+        tags: ${{ steps.meta-jobs.outputs.tags }}
+        labels: ${{ steps.meta-jobs.outputs.labels }}
+        cache-from: type=gha,scope=jobs
+        cache-to: type=gha,scope=jobs,mode=max
+
+  # Release: ask g3wis/infra to pin this commit's images and redeploy the ucicle stack. This
+  # repository never sees the vault password, the server's SSH key, or push access to g3wis/infra.
+  deploy_server:
+    needs: build_server
+    runs-on: ubuntu-latest
+    permissions: {}
+    # One release at a time; a newer push waits for the running one.
+    concurrency:
+      group: deploy-server
+      cancel-in-progress: false
+    steps:
+    - name: Dispatch deploy-stack on g3wis/infra
+      env:
+        # Fine-grained PAT scoped to g3wis/infra only, permission Actions: write only.
+        GH_TOKEN: ${{ secrets.INFRA_DEPLOY_TOKEN }}
+      run: |
+        set -euo pipefail
+        if [ -z "${GH_TOKEN:-}" ]; then
+          echo "::warning title=Server not deployed::Images pushed. Set the secret INFRA_DEPLOY_TOKEN to deploy the ucicle stack (deploy/README.md)."
+          exit 0
+        fi
+        # Same tag docker/metadata-action publishes above (type=sha,format=short).
+        tag="sha-${GITHUB_SHA::7}"
+        gh workflow run deploy-stack.yml --repo g3wis/infra --ref main \
+          -f stack=ucicle -f "tag=$tag"
+        echo "dispatched deploy-stack for ucicle @ $tag"
 
   deploy_functions:
     runs-on: ubuntu-latest

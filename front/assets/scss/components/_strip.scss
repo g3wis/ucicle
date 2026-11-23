@@ -1,0 +1,220 @@
+// The start list: the published ranking printed as Tyvek strips on the road (direction contract
+// "La liste des engagés"). The rank is the strip's bib numeral, in the ink column. The whole strip
+// is the rider link's hit area; the hover rise is the only motion.
+
+// One measure wherever the list prints (ranking, top 10, neighbours, teammates, search results):
+// the name and its index stay within one glance.
+.start-list {
+  display: grid;
+  gap: var(--sp-2);
+  max-width: 48rem;
+}
+
+.strip {
+  --focus: var(--focus-on-tarmac);
+
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--strip-rank-w, 3.25rem) minmax(0, 1fr) auto auto;
+  align-items: stretch;
+  min-height: 56px;
+  background: var(--tyvek);
+  color: var(--ink);
+  border-radius: var(--r-strip);
+  box-shadow: 0 1px 0 rgb(0 0 0 / 35%);
+  overflow: hidden;
+}
+
+.start-list-moves .strip {
+  grid-template-columns: var(--strip-rank-w, 3.25rem) minmax(0, 1fr) auto auto 3.25rem;
+}
+
+.strip-rank {
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+  color: var(--tyvek);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-numeral);
+  font-weight: 900;
+  font-size: 1.75rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+
+  &[data-digits='4'],
+  &[data-digits='5'] {
+    font-size: 1.25rem;
+  }
+}
+
+.strip-who {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--sp-2) var(--sp-3);
+}
+
+.strip-name {
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+  overflow-wrap: break-word;
+
+  // The whole strip answers the click and the tap (a 56 px target).
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+// Keyboard focus: the site's 3 px ring, so it differs from the current rider's 2 px outline.
+.strip:focus-within {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.strip-team {
+  overflow: hidden;
+  color: var(--ink-2);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.05em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.strip-nation {
+  align-self: center;
+  padding: 0 var(--sp-2);
+  color: var(--ink-2);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.04em;
+}
+
+.strip-index {
+  align-self: center;
+  padding: 0 var(--sp-3) 0 var(--sp-1);
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-size: var(--fs-lg);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.strip-move {
+  align-self: center;
+  padding-right: var(--sp-3);
+  font-size: var(--fs-xs);
+  text-align: right;
+}
+
+// The rider of the page, in a list of his neighbours: outlined on the road, said in the text,
+// not a link.
+.strip-current {
+  outline: 2px solid var(--on-tarmac);
+  outline-offset: 2px;
+}
+
+.strip-current .strip-name::after {
+  content: none;
+}
+
+// When moves are shown, the move column narrows on a phone so the name keeps its room.
+@media (max-width: 479px) {
+  .start-list-moves .strip {
+    grid-template-columns: var(--strip-rank-w, 3.25rem) minmax(0, 1fr) auto auto 2.5rem;
+  }
+
+  .strip-move {
+    padding-right: var(--sp-1);
+  }
+
+  .strip-index {
+    padding-right: var(--sp-2);
+  }
+}
+
+@media (min-width: 480px) {
+  .strip-move {
+    font-size: var(--fs-sm);
+  }
+}
+
+@media (max-width: 359px) {
+  .strip-nation {
+    display: none;
+  }
+
+  .start-list-moves .strip {
+    grid-template-columns: var(--strip-rank-w, 2.75rem) minmax(0, 1fr) auto 2.25rem;
+  }
+
+  .strip-index {
+    padding-left: 0;
+  }
+
+  .strip-move {
+    padding-right: var(--sp-2);
+  }
+}
+
+// Hover, fine pointer only: a hard 2 px edge (the primary button's grammar) and the name
+// underlined, without motion; the 1 px rise only when motion is welcome. The current rider's strip
+// is not a link: no hover.
+@media (hover: hover) and (pointer: fine) {
+  .strip:not(.strip-current):hover {
+    box-shadow: 0 2px 0 rgb(0 0 0 / 45%);
+  }
+
+  .strip:not(.strip-current):hover .strip-name {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .strip {
+    transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+  }
+
+  .strip:not(.strip-current):hover {
+    transform: translateY(-1px);
+  }
+}
+
+// A change: arrow, signed figure, sentence for screen readers. Ink or the surface's text colour,
+// never red or green (the index has no semantic colour).
+.delta {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  // A change is a figure: the bib's numerals, like the index beside it (decision D7).
+  font-family: var(--font-bib);
+  font-stretch: var(--stretch-band);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.delta-arrow {
+  font-size: 0.7em;
+}
+
+.delta[data-sign='flat'] .delta-arrow {
+  font-size: 1em;
+  font-weight: 800;
+}

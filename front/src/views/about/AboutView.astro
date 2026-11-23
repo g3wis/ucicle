@@ -1,0 +1,14 @@
+---
+import Base from '../../layouts/Base.astro';
+import AboutStatic from '../../app/AboutStatic';
+import { meta } from '../../content/meta';
+import { PAGES } from '../../app/nav';
+import type { Lang } from '../../i18n/language';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const m = meta[lang].about;
+---
+<Base lang={lang} page="about" title={m.title} description={m.description} path={PAGES.about[lang]} alternates={PAGES.about}>
+  <AboutStatic lang={lang} />
+</Base>

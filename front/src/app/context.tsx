@@ -5,8 +5,8 @@ import type { Lang, PageKey } from '../i18n/language';
 import type { CommonContent } from '../content/types';
 import { common } from '../content/common';
 
-export type PanelKey = 'help' | 'stats' | 'menu';
-const PANELS: PanelKey[] = ['help', 'stats', 'menu'];
+export type PanelKey = 'help' | 'stats';
+const PANELS: PanelKey[] = ['help', 'stats'];
 
 type AppContextValue = {
   lang: Lang,
@@ -27,6 +27,7 @@ type AppContextValue = {
 const AppContext = createContext<AppContextValue | null>(null);
 
 const panelFromHash = (): PanelKey | null => {
+  if (typeof window === 'undefined') return null; // rendered on the server (About)
   const key = window.location.hash.replace('#', '') as PanelKey;
   return PANELS.includes(key) ? key : null;
 };
@@ -42,7 +43,8 @@ export function AppProvider({ lang, page, children }: { lang: Lang, page: PageKe
   useEffect(() => {
     const onHash = () => {
       const next = panelFromHash();
-      if (!next) pushed.current = false;
+      // A panel opened by a link of the shell's header (href="#help") added a history entry too.
+      pushed.current = next !== null;
       setPanel(next);
     };
     window.addEventListener('hashchange', onHash);

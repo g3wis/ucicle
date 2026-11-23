@@ -1,0 +1,15 @@
+# Build context: functions/ (deploy/jobs.Dockerfile). Never send .env (Scaleway keys) to the build.
+**/node_modules
+build
+.data
+functions.zip
+docs
+.env
+.env.*
+**/.DS_Store
+*.log
+dist
+snap
+.astro
+.bunshin
+.impeccable

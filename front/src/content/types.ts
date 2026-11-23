@@ -1,8 +1,8 @@
-import type { Lang, PageKey } from '../i18n/language';
+import type { Lang } from '../i18n/language';
 import type { RaceType } from '../types/CyclingTypes';
 import type { Trend, Same } from '../game/compare';
 
-export type NavKey = 'game' | 'riders' | 'teams' | 'races';
+export type NavKey = 'game' | 'ranking' | 'teams' | 'races';
 export type NumericAttribute = 'age' | 'height' | 'weight';
 export type Attribute = NumericAttribute | 'country' | 'team';
 
@@ -10,9 +10,10 @@ export type Attribute = NumericAttribute | 'country' | 'team';
 export type CommonContent = {
   lang: Lang,
   siteName: string,
-  skipLink: Record<PageKey, string>,
+  /** The skip link: to the board on the game page, to the main content everywhere else. */
+  skipLink: { game: string, content: string },
   header: {
-    home: string, help: string, stats: string, menu: string, nav: string,
+    home: string, help: string, stats: string, nav: string,
     /**
      * The other language in the header from 1024 px (D24): `code` is the visible "EN" / "FR",
      * `name` its accessible name, written in that language.
@@ -20,7 +21,6 @@ export type CommonContent = {
     language: { code: string, name: string },
   },
   nav: Record<NavKey, string>,
-  menu: { title: string, sections: string, about: string, language: string, otherLanguage: string },
   footer: { data: string, about: string, otherLanguage: string },
   panel: { close: string },
   game: GameContent,
@@ -29,6 +29,8 @@ export type CommonContent = {
 export type GameContent = {
   title: string,
   loading: string,
+  /** Said without JavaScript, under the loading line: the game needs it, the index does not. */
+  noScript: string,
   loadError: string,
   retry: string,
   /** The mystery bib's top band: stage number and date. */
@@ -93,6 +95,8 @@ export type GameContent = {
   shareHeadline: (stage: number, tries: number | null, max: number) => string,
   shareUrl: string,
   nextStart: string,
+  /** After the reveal: the link to the mystery rider's index page. */
+  riderLink: string,
   newStart: string,
   reload: string,
 };

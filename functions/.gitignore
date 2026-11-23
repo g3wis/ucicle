@@ -30,3 +30,6 @@ functions.zip
 test
 src/**.js
 package-lock.json
+
+# Index data: raw DataRide archive (default RAW_ARCHIVE_DIR)
+.data/

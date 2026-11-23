@@ -5,15 +5,21 @@ answers of 2026-11-16. What is not known is listed under "Never invented".
 
 ## Platform
 
-Web, mobile first. Static site served from a Scaleway Object Storage bucket in website mode
-behind `https://www.ucicle.fr` (apex `ucicle.fr` redirects). No backend at runtime: the bucket
-serves the HTML, the bundles and two JSON files, `/api/riders.json` and `/api/secret_rider.json`.
+Web, mobile first, `https://www.ucicle.fr` (apex `ucicle.fr` redirects). Since the Index
+(2026-11-17, owner's answers): an Astro server (Node) reading PostgreSQL, hosted on a Linux server
+the owner provides (no serverless limits: the data jobs run there on a schedule, without time
+limit). The game and About are prerendered; the home, the ranking, the rider pages and the method
+are rendered on request with HTTP caching. The game's two JSON files are served on
+`/api/riders.json` and `/api/secret_rider.json`: read from `GAME_DATA_DIR` on the server when set,
+otherwise relayed from the Object Storage bucket the game jobs write today.
 
 ## Stack
 
-React 18, TypeScript 4.9 compiled by `ttsc` to `ts-built/`, then bundled by Vite 4. SCSS.
-`motion` 14.9 for animation. Fonts self-hosted through @fontsource (Archivo Variable, Atkinson
-Hyperlegible Next Variable). No UI kit (MUI removed in the redesign).
+Astro 7.4 (`@astrojs/node`, `@astrojs/react`), React 18 for the game island, TypeScript 5.9, SCSS
+(Sass 1.107). `motion` 14.9 for the game's animation. postgres.js for the database. Fonts
+self-hosted through @fontsource (Archivo Variable, Atkinson Hyperlegible Next Variable). No UI kit.
+Data jobs in `functions/` (Node 26): the DataRide collector and the rating engine write PostgreSQL
+(`functions/SCHEMA.md`).
 
 ## Users
 
@@ -23,9 +29,20 @@ English second. They arrive on a phone, most often from a result a friend shared
 
 ## Product purpose
 
-A free daily guessing game: find the mystery pro cyclist of the day in five tries. The site will
-later grow into a general database of amateur and pro riders, teams and races; the game is the
-first section and must stay first.
+A free daily guessing game: find the mystery pro cyclist of the day in five tries. Since
+2026-11-17, a second section: the Index, an Elo-type rating of every men elite road rider
+computed from every UCI result since the 2019 season (2019 is a warm-up: computed, not ranked; the
+ranking is published from 2020), with a page per rider (his info, his index, his
+results, his history), a paginated ranking with search, and an SEO-oriented home at `/` (today's
+game stage first, then the top 10 and the latest results; the game moved to `/jeu/`). The site
+will later grow into a general database of amateur and pro riders, teams and races: the rating
+must not depend on one data source.
+
+Owner's words (2026-11-17): "On va ajouter un nouveau pan au site : l'index. L'objectif est de
+calculer pour chaque coureur un index / ELO qui détermine un classement. [...] Il faut pour chaque
+coureur une page coureur avec ses info, son index, ses résultats, son historique. Il faudra
+également une page classement paginée avec recherche. Côté accueil => orienté référencement avec
+également le top 10 et les derniers résultats".
 
 ## Positioning
 
@@ -64,7 +81,7 @@ Cyclerly) lack one or the other (research synthesis, `.bunshin/research/synthesi
   UTC, not at local midnight).
 - Head tags (title, description, canonical, hreflang, Open Graph) must be in the static HTML:
   link previews do not run JavaScript.
-- `yarn cd` uploads `build/` to the bucket: nothing under `build/` may be named `api/`.
+- The site is an Astro server (`dist/server/entry.mjs`) deployed as the `ucicle` stack of g3wis/infra, behind Traefik (deploy/README.md); `/api/*.json` are its own routes.
 
 ## Brand commitments
 
@@ -97,6 +114,26 @@ APG combobox pattern with a visible label; one live-region sentence per guess; k
 to end; visible focus; reduced motion honoured (fades only); 44 px touch targets; no horizontal
 scroll at 320 px; forced-colors keeps real borders.
 
+## The Index (facts)
+
+- Scope: men elite, road, UCI classes 1.UWT, 2.UWT, 1.Pro, 2.Pro (1.HC, 2.HC), 1.1, 2.1, 1.2, 2.2,
+  national, continental and world championships, Olympic road race and ITT; seasons 2019
+  (warm-up, not published) to today. Source: UCI DataRide (every starter of every
+  classification, with DNF/DNS/OTL/DSQ). Height, weight and wiki links from Wikidata.
+- Model: "Index Ucicle v1", a multi-competitor Elo by duels on the top of each finish order,
+  weighted by UCI class and classification type, recomputed from zero every night. K 80, the
+  owner's choice ("équilibré", 2026-11-17). Riders start at 1500, or 1250 when their first counted
+  race is a national championship or a .2 race, and K is multiplied by 2.5 in .2 races (owner's
+  choice of 2026-11-18, bounded so a .2 race never weighs more than a WorldTour race): without it,
+  riders who only race there drifted 122 points too high (49 left with it). Test 2024-2025: winner
+  picked in 75.7 % of duels, UCI World Ranking 64.1 %. Every change
+  is printed with its calculation on the rider page; every parameter on the method page
+  (`.bunshin/research/synthesis.md`, section 9; `functions/SCHEMA.md`).
+- Statuses: provisional below 10 experience units (not in the ranking, page not indexed), inactive
+  after 365 days without a counted result (index frozen, out of the ranking).
+- The index is never called "classement UCI", results since 2020 are never called "palmarès".
+- Pending for launch: the UCI's written answer on reusing DataRide data (no licence found).
+
 ## Never invented
 
 - Player counts, success rates across players, ratings or reviews.
@@ -106,4 +143,6 @@ scroll at 320 px; forced-colors keeps real borders.
   their place).
 - The stage number origin date: the owner chooses it. Until then `STAGE_ORIGIN` in
   `src/game/stage.ts` is an assumption, listed in the report.
-- A "last updated" date.
+- A "last updated" date that is not the end of the latest successful collection (`job_run`).
+- Rider biographies, rider photographs, team or race logos; any rating not explained on the
+  method page; ± intervals (v1 computes none).

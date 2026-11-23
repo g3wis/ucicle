@@ -46,20 +46,16 @@ const joinYears = (years: number[], and: string): string => {
 const fr: CommonContent = {
   lang: 'fr',
   siteName: 'Ucicle',
-  skipLink: { game: 'Aller au jeu', about: 'Aller au contenu' },
+  skipLink: { game: 'Aller au jeu', content: 'Aller au contenu' },
   header: {
-    home: 'Ucicle, le coureur mystère du jour',
+    home: 'Ucicle, accueil',
     help: 'Aide',
     stats: 'Stats',
-    menu: 'Menu',
     nav: 'Sections',
     language: { code: 'EN', name: 'EN, English version' },
   },
   nav: {
-    game: 'Jeu', riders: 'Coureurs', teams: 'Équipes', races: 'Courses',
-  },
-  menu: {
-    title: 'Menu', sections: 'Sections', about: 'À propos', language: 'Langue', otherLanguage: 'English',
+    game: 'Jeu', ranking: 'Classement', teams: 'Équipes', races: 'Courses',
   },
   footer: {
     data: 'Données UCI DataRide, Wikidata et Wikipédia', about: 'À propos', otherLanguage: 'English',
@@ -68,6 +64,7 @@ const fr: CommonContent = {
   game: {
     title: 'Le coureur mystère du jour',
     loading: 'Le peloton arrive…',
+    noScript: 'Le jeu a besoin de JavaScript. En attendant, le classement de l’index et la page À propos se lisent sans.',
     loadError: 'Les données du jour ne sont pas arrivées.',
     retry: 'Réessayer',
     band: (stage, date) => `Étape ${stage}, ${date}`,
@@ -144,8 +141,9 @@ const fr: CommonContent = {
     shareHeadline: (stage, tries, max) => (tries
       ? `Ucicle #${stage}, trouvé en ${tries}/${max} 🚴`
       : `Ucicle #${stage}, raté X/${max} 🚴`),
-    shareUrl: 'https://www.ucicle.fr',
+    shareUrl: 'https://www.ucicle.fr/jeu/',
     nextStart: 'Prochain départ dans',
+    riderLink: 'Sa fiche : index et résultats',
     newStart: 'Le prochain coureur est au départ.',
     reload: 'Jouer',
   },
@@ -154,20 +152,16 @@ const fr: CommonContent = {
 const en: CommonContent = {
   lang: 'en',
   siteName: 'Ucicle',
-  skipLink: { game: 'Skip to the game', about: 'Skip to the content' },
+  skipLink: { game: 'Skip to the game', content: 'Skip to the content' },
   header: {
-    home: 'Ucicle, today’s mystery rider',
+    home: 'Ucicle, home',
     help: 'Help',
     stats: 'Stats',
-    menu: 'Menu',
     nav: 'Sections',
     language: { code: 'FR', name: 'FR, version française' },
   },
   nav: {
-    game: 'Game', riders: 'Riders', teams: 'Teams', races: 'Races',
-  },
-  menu: {
-    title: 'Menu', sections: 'Sections', about: 'About', language: 'Language', otherLanguage: 'Français',
+    game: 'Game', ranking: 'Ranking', teams: 'Teams', races: 'Races',
   },
   footer: {
     data: 'Data from UCI DataRide, Wikidata and Wikipedia', about: 'About', otherLanguage: 'Français',
@@ -176,6 +170,7 @@ const en: CommonContent = {
   game: {
     title: 'Today’s mystery rider',
     loading: 'The bunch is coming…',
+    noScript: 'The game needs JavaScript. Meanwhile, the index ranking and the About page work without it.',
     loadError: 'Today’s data did not arrive.',
     retry: 'Try again',
     band: (stage, date) => `Stage ${stage}, ${date}`,
@@ -251,8 +246,9 @@ const en: CommonContent = {
     shareHeadline: (stage, tries, max) => (tries
       ? `Ucicle #${stage}, found in ${tries}/${max} 🚴`
       : `Ucicle #${stage}, missed X/${max} 🚴`),
-    shareUrl: 'https://www.ucicle.fr/en/',
+    shareUrl: 'https://www.ucicle.fr/en/play/',
     nextStart: 'Next start in',
+    riderLink: 'His page: index and results',
     newStart: 'The next rider is on the start line.',
     reload: 'Play',
   },
